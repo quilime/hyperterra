@@ -9,6 +9,7 @@
 #include "cinder/gl/GlslProg.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/ImageIo.h"
+#include "cinder/ObjLoader.h"
 #include "cinder/params/Params.h"
 #include "cinder/Rand.h"
 #include "cinder/Text.h"
@@ -30,7 +31,6 @@ static const float	APP_RES_HORIZONTAL = 1024.0f;
 static const float	APP_RES_VERTICAL = 768.0f;
 static const Vec3f	CAM_POSITION_INIT( -14.0f, 7.0f, -14.0f );
 static const Vec3f	LIGHT_POSITION_INIT( 3.0f, 1.5f, 0.0f );
-static const int    NUM_LIGHTS = 500;        //number of lights
 
 
 class DeferredRenderingAdvancedApp : public AppBasic
@@ -64,6 +64,10 @@ protected:
     DeferredRenderer    mDeferredRenderer;
     
     int mCurrLightIndex;
+  
+  // object loading
+  TriMesh       mMesh;
+  gl::VboMesh   mVBO;
 };
 
 #pragma mark - lifecycle functions
@@ -71,10 +75,10 @@ protected:
 void DeferredRenderingAdvancedApp::prepareSettings( Settings *settings )
 {
 	settings->setWindowSize( APP_RES_HORIZONTAL, APP_RES_VERTICAL );
-    settings->setBorderless( true );
+  settings->setBorderless( true );
 	settings->setFrameRate( 1000.0f );			//the more the merrier!
 	settings->setResizable( false );			//this isn't going to be resizable
-    settings->setFullScreen( false );
+  settings->setFullScreen( false );
     
 	//make sure secondary screen isn't blacked out as well when in fullscreen mode ( do wish it could accept keyboard focus though :(
 	//settings->enableSecondaryDisplayBlanking( false );
@@ -94,6 +98,12 @@ void DeferredRenderingAdvancedApp::setup()
     mParams.addParam( "Selected Light Index", &mCurrLightIndex);
 	mParams.addParam( "Show/Hide Params", &mShowParams, "key=x");
 	mParams.addSeparator();
+  
+  // load object
+  ObjLoader loader( (DataSourceRef)loadResource( RES_LANDSCAPE_OBJ ) );
+  loader.load( &mMesh );
+  mVBO = gl::VboMesh( mMesh );
+  
     
 	mCurrFramerate = 0.0f;
 	mShowParams = true;
@@ -118,42 +128,19 @@ void DeferredRenderingAdvancedApp::setup()
     //mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, fRenderOverlayFunc, fRenderParticlesFunc, &mMayaCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true ); //overlay and "particles" enabled -- not working yet
     
     //have these cast point light shadows
-    mDeferredRenderer.addPointLight(    Vec3f(-2.0f, 4.0f, 6.0f),      Color(0.10f, 0.69f, 0.93f) * LIGHT_BRIGHTNESS_DEFAULT, true);      //blue
-    mDeferredRenderer.addPointLight(    Vec3f(4.0f, 6.0f, -4.0f),      Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);      //red
-    
-    //add a bunch of lights
-    for(int i = 0; i < NUM_LIGHTS; i++) {
-        
-        int randColIndex = Rand::randInt(5);
-        Color randCol;
-        switch( randColIndex ) {
-            case 0:
-                randCol = Color(0.99f, 0.67f, 0.23f); //orange
-                break;
-            case 1:
-                randCol = Color(0.97f, 0.24f, 0.85f); //pink
-                break;
-            case 2:
-                randCol = Color(0.00f, 0.93f, 0.30f); //green
-                break;
-            case 3:
-                randCol = Color(0.98f, 0.96f, 0.32f); //yellow
-                break;
-            case 4:
-                randCol = Color(0.10f, 0.69f, 0.93f); //blue
-                break;
-            case 5:
-                randCol = Color(0.94f, 0.15f, 0.23f); //red
-                break;
-        };
-        
-        mDeferredRenderer.addPointLight( Vec3f(Rand::randFloat(-1000.0f, 1000.0f),Rand::randFloat(0.0f, 50.0f),Rand::randFloat(-1000.0f, 1000.0f)),
-                                       randCol * LIGHT_BRIGHTNESS_DEFAULT,
-                                       false,
-                                       true);
-    }
+    Color white = Color(1.0f, 1.0f, 1.0f);
+    mDeferredRenderer.addPointLight(    Vec3f(-2.0f, 4.0f, 6.0f),
+                                    white * LIGHT_BRIGHTNESS_DEFAULT * 0.65, true);      //blue
+  
+//    mDeferredRenderer.addPointLight(    Vec3f(4.0f, 6.0f, -4.0f),      Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);      //red
+  
     
     mCurrLightIndex = 0;
+  
+  // object loading
+  TriMesh       mMesh;
+  gl::VboMesh   mVBO;
+  
 }
 
 void DeferredRenderingAdvancedApp::update()
@@ -174,7 +161,7 @@ void DeferredRenderingAdvancedApp::draw()
 
 void DeferredRenderingAdvancedApp::keyDown( KeyEvent event )
 {
-    float lightMovInc = 0.1f;
+    float lightMovInc = 0.25f;
     
 	switch ( event.getCode() )
 	{
@@ -276,14 +263,14 @@ void DeferredRenderingAdvancedApp::keyDown( KeyEvent event )
 void DeferredRenderingAdvancedApp::mouseDown( MouseEvent event )
 {
     if( event.isAltDown() ) {
-		mMayaCam.mouseDown( event.getPos() );
+      mMayaCam.mouseDown( event.getPos() );
     }
 }
 
 void DeferredRenderingAdvancedApp::mouseDrag( MouseEvent event )
 {
     if( event.isAltDown() ) {
-		mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
+      mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
     }
 }
 
@@ -291,86 +278,32 @@ void DeferredRenderingAdvancedApp::mouseDrag( MouseEvent event )
 
 void DeferredRenderingAdvancedApp::drawShadowCasters(gl::GlslProg* deferShader) const
 {
-	//just some test objects
-    if(deferShader != NULL) {
-        deferShader->uniform("useTexture", 1.0f);
-        deferShader->uniform("tex0", 0);
-        mEarthTex.bind(0);
-    }
-    
-    glColor3ub(255,255,255);
-    gl::drawSphere( Vec3f(-1.0, 0.0,-1.0), 1.0f, 30 );
-    
-    if(deferShader != NULL) {
-        deferShader->uniform("useTexture", 0.0f);
-        mEarthTex.unbind(0);
-    }
-    
-	glColor3ub(0,255,0);
-    gl::drawCube( Vec3f( 1.0f, 0.0f, 1.0f ), Vec3f( 2.0f, 2.0f, 2.0f ) );
-    
-    glColor3ub(255,0,255);
-    gl::drawCube( Vec3f( 0.0f, 0.0f, 4.5f ), Vec3f( 1.0f, 2.0f, 1.0f ) );
-    
-    glColor3ub(255,255,0);
-    gl::drawCube( Vec3f( 3.0f, 0.0f, -1.5f ), Vec3f( 1.0f, 3.0f, 1.0f ) );
-    
-	glColor3ub(255,0,255);
-    gl::pushMatrices();
-	glTranslatef(-2.0f, -0.7f, 2.0f);
-	glRotated(90.0f, 1, 0, 0);
-    gl::drawTorus( 1.0f, 0.3f, 32, 64 );
-	gl::popMatrices();
-    
+  gl::pushMatrices();
+//  gl::scale(1.0f, 1.0f, 1.0f);
+  gl::draw( mVBO );
+  gl::popMatrices();
 }
 
 void DeferredRenderingAdvancedApp::drawNonShadowCasters(gl::GlslProg* deferShader) const
 {
-    int size = 3000;
-    //a plane to capture shadows (though it won't cast any itself)
-    glColor3ub(255, 255, 255);
-    glNormal3f(0.0f, 1.0f, 0.0f);
-    glBegin(GL_QUADS);
-    glVertex3i( size, -1,-size);
-    glVertex3i(-size, -1,-size);
-    glVertex3i(-size, -1, size);
-    glVertex3i( size, -1, size);
-    glEnd();
+//    int size = 3000;
+//    //a plane to capture shadows (though it won't cast any itself)
+//    glColor3ub(255, 255, 255);
+//    glNormal3f(0.0f, 1.0f, 0.0f);
+//    glBegin(GL_QUADS);
+//    glVertex3i( size, 0,-size);
+//    glVertex3i(-size, 0,-size);
+//    glVertex3i(-size, 0, size);
+//    glVertex3i( size, 0, size);
+//    glEnd();
 }
 
 void DeferredRenderingAdvancedApp::drawOverlay() const
 {
-    Vec3f camUp, camRight;
-    mCam.getBillboardVectors(&camRight, &camUp);
-    
-    //create text labels
-    TextLayout layout1;
-	layout1.clear( ColorA( 1.0f, 1.0f, 1.0f, 0.0f ) );
-	layout1.setFont( Font( "Arial", 34 ) );
-	layout1.setColor( ColorA( 255.0f/255.0f, 255.0f/255.0f, 8.0f/255.0f, 1.0f ) );
-	layout1.addLine( to_string(getAverageFps()) ); //to_string is a c++11 function for conversions
-	Surface8u rendered1 = layout1.render( true, false );
-    gl::Texture fontTexture_FR = gl::Texture( rendered1 );
-    
-    //draw framerate
-    fontTexture_FR.bind();
-    gl::drawBillboard(Vec3f(-3.0f, 7.0f, 20.0f), Vec2f(fontTexture_FR.getWidth()/20.0f , fontTexture_FR.getHeight()/20.0f), 0, camRight, camUp);
-    fontTexture_FR.unbind();
 }
 
 void DeferredRenderingAdvancedApp::drawDepthParticles() const
 {
-    gl::enableAdditiveBlending();
-    
-    //this where typically a particle engine would go. For now lets just draw some "earths"
-    glColor4ub(255, 255, 255, 160);
-    mEarthTex.bind();
-    gl::drawCube(Vec3f(3.0f, 2.0f, 8.0f), Vec3f(3.0f, 3.0f, 3.0f));
-    gl::drawCube(Vec3f(1.0f, 5.0f, -3.0f), Vec3f(3.0f, 3.0f, 3.0f));
-    gl::drawCube(Vec3f(-3.0f, 3.0f, 4.0f), Vec3f(3.0f, 3.0f, 3.0f));
-    gl::drawCube(Vec3f(-2.0f, 4.0f, 7.0f), Vec3f(3.0f, 3.0f, 3.0f));
-    mEarthTex.unbind();
-    glColor4ub(255, 255, 255, 255);
 }
 
 CINDER_APP_BASIC( DeferredRenderingAdvancedApp, RendererGl )

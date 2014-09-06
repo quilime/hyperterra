@@ -3,6 +3,7 @@
 
 //#define RES_MY_RES			CINDER_RESOURCE( ../resources/, image_name.png, 128, IMAGE )
 
+#define RES_LANDSCAPE_OBJ CINDER_RESOURCE( ../resources/, landscape-hires.obj,   128, DATA )
 
 
 
