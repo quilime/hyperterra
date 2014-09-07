@@ -56,7 +56,6 @@ protected:
     cinder::params::InterfaceGl mParams;
     bool				mShowParams;
     float				mCurrFramerate;
-    gl::Texture         mEarthTex;
 	
     //camera
     MayaCamUI           mMayaCam;   //need a camera that will allow mCam to mirror it as MayaCamUI doesn't current allow a non const reference to its CameraPersp
@@ -87,8 +86,7 @@ void DeferredRenderingAdvancedApp::prepareSettings( Settings *settings )
 void DeferredRenderingAdvancedApp::setup()
 {
     //!!test texture for diffuse texture
-    mEarthTex = gl::Texture( loadImage( loadResource( RES_TEX_EARTH ) ) );
-    
+  
 	gl::disableVerticalSync(); //so I can get a true representation of FPS (if higher than 60 anyhow :/)
     
 	RENDER_MODE = DeferredRenderer::SHOW_FINAL_VIEW;

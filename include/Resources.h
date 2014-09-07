@@ -3,11 +3,9 @@
 
 //#define RES_MY_RES			CINDER_RESOURCE( ../resources/, image_name.png, 128, IMAGE )
 
-#define RES_LANDSCAPE_OBJ CINDER_RESOURCE( ../resources/, landscape2.obj,   128, DATA )
+#define RES_LANDSCAPE_OBJ CINDER_RESOURCE( ../resources/, landscape-split.obj,   128, DATA )
 
 
-
-#define RES_TEX_EARTH		CINDER_RESOURCE( ../resources/, Earth_from_NASA.jpg, 147, IMAGE )
 #define RES_TEX_NOISE_SAMPLER		CINDER_RESOURCE( ../blocks/Cinder Deferred Renderer/resources/CinderDeferredResources/textures/, random.png, 128, IMAGE )
 #define RES_GLSL_ALPHA_RGB_VERT		CINDER_RESOURCE( ../blocks/Cinder Deferred Renderer/resources/CinderDeferredResources/shaders/, AlphaToRGB_glsl.vert, 129, GLSL )
 #define RES_GLSL_ALPHA_RGB_FRAG		CINDER_RESOURCE( ../blocks/Cinder Deferred Renderer/resources/CinderDeferredResources/shaders/, AlphaToRGB_glsl.frag, 130, GLSL )

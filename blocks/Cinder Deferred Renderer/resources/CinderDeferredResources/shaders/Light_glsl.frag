@@ -22,7 +22,7 @@ void main(void)
 	float phong_coeff = attr.g;
 	float two_sided = attr.b;
 	float cost = dot(norm.xyz, VP);
-	//cost = (cost < 0.0)?-two_sided*cost:cost; //calculate two sided lighting.
+	cost = (cost < 0.0)?-two_sided*cost:cost; //calculate two sided lighting.
 	float diff = diff_coeff*cost; //calculate diffuse shading
 	vec3 H = normalize(VP+normalize(camPos - pos.xyz)); //calculate half vector
 	float phong = phong_coeff*pow(max(dot(H, norm.xyz), 0.0), 100.0); //calculate phong shading
