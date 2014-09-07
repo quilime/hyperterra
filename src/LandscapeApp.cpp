@@ -159,7 +159,16 @@ void LandscapeApp::initPython() {
   
   Py_Initialize();
   
+  PyRun_SimpleString("import imp");
+  PyRun_SimpleString("import ephem");  
+  char cmd [200];
+  sprintf (cmd, "ephemScript = imp.load_source('ephemScript', '%s')", ephemScriptPath.c_str());
+  PyRun_SimpleString(cmd);
+  PyRun_SimpleString("ephemScript.printPosition(ephem.Sun())");
   
+  
+//  // simple string
+//  if (false) {
 //  PyRun_SimpleString("result = 5 ** 2");
 //  
 //  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
@@ -172,15 +181,10 @@ void LandscapeApp::initPython() {
 //  assert(result);                                     // just added result
 //  assert(PyInt_Check(result));                        // result should be an integer
 //  long result_value = PyInt_AS_LONG(result);          // already checked that it is an int
-//  
+//  console() << result_value << std::endl;
+//  }
   
-  PyRun_SimpleString("import ephem");
-//  PyRun_SimpleString("import imp");
-//  char cmd [100];
-//  sprintf (cmd, "ephemScript = imp.load_source('ephemScript', '%s')", ephemScriptPath.c_str());
-//  PyRun_SimpleString(cmd);
-//  PyRun_SimpleString("ephemScript.printPosition(ephem.Sun())");
-//
+  
 
   
   Py_Finalize();
