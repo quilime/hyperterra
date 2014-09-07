@@ -70,6 +70,13 @@ class LandscapeApp : public AppBasic
     // light positions
     Vec2<double> getSunPosition(long UTCtimestamp);
     Vec2<double> getMoonPosition(long UTCtimestamp);
+  
+    long mCurTime;
+  
+    Vec2<double> mSunPos;
+    Vec2<double> mMoonPos;
+  
+    int count;
 };
 
 
@@ -137,7 +144,8 @@ void LandscapeApp::setup()
     
   mCurrLightIndex = 0;
   
-  
+  mCurTime = std::time(0);
+  count = 0;
 
   // object loading
   TriMesh       mMesh;
@@ -161,26 +169,51 @@ void LandscapeApp::update()
   mCam = mMayaCam.getCamera();
   mDeferredRenderer.mCam = &mCam;
 	mCurrFramerate = getAverageFps();
+
   
-  Vec2<float> sunPos = getSunPosition(std::time(0));
-  Vec2<float> moonPos = getMoonPosition(std::time(0));
+
+  
+  
+  
+  count++;
+  
+  if (count > 10) {
+    count = 0;
+    mCurTime += 1;
+
+    mSunPos = getSunPosition(std::time(0));
+    mMoonPos = getMoonPosition(std::time(0));
+    
+    console() << std::time(0) << endl;
+//    console() << mCurTime << endl;
+    console() << mSunPos << endl;
+    console() << mMoonPos << endl;
+    
+//    mSunPos.x /= 360.0f;
+//    mSunPos.y /= 360.0f;
+  
+//    mMoonPos.x /= 360.0f;
+//    mMoonPos.y /= 360.0f;
+  }
+  
+  
   
   // rotate lights
   float lightDistance = 14.0f;
   mDeferredRenderer.getCubeLightsRef()->at(0)->setPos(
     Vec3f(
-      lightDistance * math<float>::cos ( sunPos.y/360 ) * math<float>::cos ( sunPos.x/360 ),
+      lightDistance * math<float>::cos ( mSunPos.y ) * math<float>::cos ( mSunPos.x ),
 //      math<float>::sin(),
-      lightDistance * math<float>::sin ( sunPos.y/360 ),
-      lightDistance * math<float>::cos ( sunPos.y/360 ) * math<float>::sin ( sunPos.x/360 )
+      lightDistance * math<float>::sin ( mSunPos.y ),
+      lightDistance * math<float>::cos ( mSunPos.y ) * math<float>::sin ( mSunPos.x )
       ));
   
   mDeferredRenderer.getCubeLightsRef()->at(1)->setPos(
     Vec3f(
-          lightDistance * math<float>::cos ( moonPos.y/360 ) * math<float>::cos ( moonPos.x/360 ),
+          lightDistance * math<float>::cos ( mMoonPos.y ) * math<float>::cos ( mMoonPos.x ),
           //      math<float>::sin(),
-          lightDistance * math<float>::sin ( moonPos.y/360 ),
-          lightDistance * math<float>::cos ( moonPos.y/360 ) * math<float>::sin ( moonPos.x/360 )
+          lightDistance * math<float>::sin ( mMoonPos.y ),
+          lightDistance * math<float>::cos ( mMoonPos.y ) * math<float>::sin ( mMoonPos.x )
           ));
 //      math<float>::cos(getElapsedSeconds() + (M_PI)) * lightDistance ));
   
@@ -384,6 +417,7 @@ void LandscapeApp::initPython() {
   sprintf (cmd, "ephemScript = imp.load_source('ephemScript', '%s')", ephemScriptPath.c_str());
   PyRun_SimpleString(cmd);
   
+  console() << "current positions:" << endl;
   console() << "sun: " << getSunPosition(std::time(0)) << endl;
   console() << "moon: " << getMoonPosition(std::time(0)) << endl;
   
@@ -392,7 +426,11 @@ void LandscapeApp::initPython() {
 Vec2<double> LandscapeApp::getSunPosition(long UTCtimestamp) {
   
   // this is ridiculously messy, just hacking it to make it work atm x_x
-  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Sun(), ephem.now())");
+  char cmd [200];
+  sprintf (cmd, "result = ephemScript.getAzimuth(ephem.Sun(), %s)", to_string(UTCtimestamp).c_str());
+  PyRun_SimpleString(cmd);
+  
+//  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Sun(), ephem.now())");
   PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
   assert(module);                                     // __main__ should always exist
   PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
@@ -402,7 +440,10 @@ Vec2<double> LandscapeApp::getSunPosition(long UTCtimestamp) {
   assert(PyFloat_Check(result));                      // result should be a float
   float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
   
-  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Sun(), ephem.now())");
+  sprintf (cmd, "result2 = ephemScript.getAltitude(ephem.Sun(), %s)", to_string(UTCtimestamp).c_str());
+  PyRun_SimpleString(cmd);
+  
+//  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Sun(), ephem.now())");
   PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
   assert(result2);                                     // just added result
   assert(PyFloat_Check(result2));                      // result should be a float
@@ -413,7 +454,11 @@ Vec2<double> LandscapeApp::getSunPosition(long UTCtimestamp) {
 Vec2<double> LandscapeApp::getMoonPosition(long UTCtimestamp) {
   
   // this is ridiculously messy, just hacking it to make it work atm x_x
-  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Moon(), ephem.now())");
+  char cmd [200];
+  sprintf (cmd, "result = ephemScript.getAzimuth(ephem.Moon(), %s)", to_string(UTCtimestamp).c_str());
+  PyRun_SimpleString(cmd);
+  
+//  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Moon(), ephem.now())");
   PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
   assert(module);                                     // __main__ should always exist
   PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
@@ -422,8 +467,11 @@ Vec2<double> LandscapeApp::getMoonPosition(long UTCtimestamp) {
   assert(result);                                     // just added result
   assert(PyFloat_Check(result));                      // result should be a float
   float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
+
+  sprintf (cmd, "result2 = ephemScript.getAltitude(ephem.Moon(), %s)", to_string(UTCtimestamp).c_str());
+  PyRun_SimpleString(cmd);
   
-  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Moon(), ephem.now())");
+//  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Moon(), ephem.now())");
   PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
   assert(result2);                                     // just added result
   assert(PyFloat_Check(result2));                      // result should be a float
