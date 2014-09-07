@@ -1,6 +1,7 @@
 #include "../include/Resources.h"
 
-1	ICON	"..\\resources\\cinder_app_icon.ico"
+1	ICON	"..\\resources\cinder_app_icon.ico"
+RES_LANDSCAPE_OBJ
 RES_TEX_NOISE_SAMPLER
 RES_GLSL_ALPHA_RGB_VERT
 RES_GLSL_ALPHA_RGB_FRAG
