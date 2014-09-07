@@ -75,7 +75,7 @@ protected:
 void DeferredRenderingAdvancedApp::prepareSettings( Settings *settings )
 {
 	settings->setWindowSize( APP_RES_HORIZONTAL, APP_RES_VERTICAL );
-  settings->setBorderless( true );
+  settings->setBorderless( false );
 	settings->setFrameRate( 1000.0f );			//the more the merrier!
 	settings->setResizable( false );			//this isn't going to be resizable
   settings->setFullScreen( false );
@@ -110,30 +110,32 @@ void DeferredRenderingAdvancedApp::setup()
 	
 	//set up camera
 	mCam.setPerspective( 45.0f, getWindowAspectRatio(), 0.1f, 10000.0f );
-    mCam.lookAt(CAM_POSITION_INIT * 1.5f, Vec3f::zero(), Vec3f(0.0f, 1.0f, 0.0f) );
-    mCam.setCenterOfInterestPoint(Vec3f::zero());
-    mMayaCam.setCurrentCam(mCam);
-    
-    //create functions pointers to send to deferred renderer
-    boost::function<void(gl::GlslProg*)> fRenderShadowCastersFunc = boost::bind( &DeferredRenderingAdvancedApp::drawShadowCasters, this, boost::lambda::_1 );
-    boost::function<void(gl::GlslProg*)> fRenderNotShadowCastersFunc = boost::bind( &DeferredRenderingAdvancedApp::drawNonShadowCasters, this,  boost::lambda::_1 );
-    boost::function<void(void)> fRenderOverlayFunc = boost::bind( &DeferredRenderingAdvancedApp::drawOverlay, this );
-    boost::function<void(void)> fRenderParticlesFunc = boost::bind( &DeferredRenderingAdvancedApp::drawDepthParticles, this );
-    
-    //NULL value represents the opportunity to a function pointer to an "overlay" method. Basically only basic textures can be used and it is overlayed onto the final scene.
-    //see example of such a function (from another project) commented out at the bottom of this class ...
-    
-    mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, NULL, NULL, &mCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true, true ); //no overlay or "particles"
-    //mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, fRenderOverlayFunc, NULL, &mMayaCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true ); //overlay enabled
-    //mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, fRenderOverlayFunc, fRenderParticlesFunc, &mMayaCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true ); //overlay and "particles" enabled -- not working yet
-    
-    //have these cast point light shadows
-    Color white = Color(1.0f, 1.0f, 1.0f);
-    mDeferredRenderer.addPointLight(    Vec3f(-2.0f, 4.0f, 6.0f),
-                                    white * LIGHT_BRIGHTNESS_DEFAULT * 0.65, true);      //blue
+  mCam.lookAt(CAM_POSITION_INIT * 1.5f, Vec3f::zero(), Vec3f(0.0f, 1.0f, 0.0f) );
+  mCam.setCenterOfInterestPoint(Vec3f::zero());
+  mMayaCam.setCurrentCam(mCam);
   
-//    mDeferredRenderer.addPointLight(    Vec3f(4.0f, 6.0f, -4.0f),      Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);      //red
+  //create functions pointers to send to deferred renderer
+  boost::function<void(gl::GlslProg*)> fRenderShadowCastersFunc = boost::bind( &DeferredRenderingAdvancedApp::drawShadowCasters, this, boost::lambda::_1 );
+  boost::function<void(gl::GlslProg*)> fRenderNotShadowCastersFunc = boost::bind( &DeferredRenderingAdvancedApp::drawNonShadowCasters, this,  boost::lambda::_1 );
+  boost::function<void(void)> fRenderOverlayFunc = boost::bind( &DeferredRenderingAdvancedApp::drawOverlay, this );
+  boost::function<void(void)> fRenderParticlesFunc = boost::bind( &DeferredRenderingAdvancedApp::drawDepthParticles, this );
   
+  //NULL value represents the opportunity to a function pointer to an "overlay" method. Basically only basic textures can be used and it is overlayed onto the final scene.
+  //see example of such a function (from another project) commented out at the bottom of this class ...
+  
+  mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, NULL, NULL, &mCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true, true ); //no overlay or "particles"
+//  mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, fRenderOverlayFunc, NULL, &mCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true ); //overlay enabled
+  //mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, fRenderOverlayFunc, fRenderParticlesFunc, &mMayaCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true ); //overlay and "particles" enabled -- not working yet
+  
+  //have these cast point light shadows
+  Color white = Color(1.0f, 1.0f, 1.0f);
+  Color blue = Color(0.2f, 1.0f, 1.0f);
+
+  mDeferredRenderer.addPointLight(    Vec3f(-2.0f, 4.0f, 6.0f),
+                                  blue * LIGHT_BRIGHTNESS_DEFAULT * 0.65, true);      //blue
+
+    mDeferredRenderer.addPointLight(    Vec3f(4.0f, 6.0f, -4.0f),      Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);      //red
+
     
     mCurrLightIndex = 0;
   
@@ -279,27 +281,43 @@ void DeferredRenderingAdvancedApp::mouseDrag( MouseEvent event )
 void DeferredRenderingAdvancedApp::drawShadowCasters(gl::GlslProg* deferShader) const
 {
   gl::pushMatrices();
-//  gl::scale(1.0f, 1.0f, 1.0f);
+  gl::scale(1.3f, 1.3f, 1.3f);
   gl::draw( mVBO );
   gl::popMatrices();
 }
 
 void DeferredRenderingAdvancedApp::drawNonShadowCasters(gl::GlslProg* deferShader) const
 {
-//    int size = 3000;
-//    //a plane to capture shadows (though it won't cast any itself)
-//    glColor3ub(255, 255, 255);
-//    glNormal3f(0.0f, 1.0f, 0.0f);
-//    glBegin(GL_QUADS);
-//    glVertex3i( size, 0,-size);
-//    glVertex3i(-size, 0,-size);
-//    glVertex3i(-size, 0, size);
-//    glVertex3i( size, 0, size);
-//    glEnd();
+    int size = 3000;
+    //a plane to capture shadows (though it won't cast any itself)
+    glColor3ub(255, 255, 255);
+    glNormal3f(0.0f, 1.0f, 0.0f);
+    glBegin(GL_QUADS);
+    glVertex3i( size, 0,-size);
+    glVertex3i(-size, 0,-size);
+    glVertex3i(-size, 0, size);
+    glVertex3i( size, 0, size);
+    glEnd();
 }
 
 void DeferredRenderingAdvancedApp::drawOverlay() const
 {
+  Vec3f camUp, camRight;
+  mCam.getBillboardVectors(&camRight, &camUp);
+  
+  //create text labels
+  TextLayout layout1;
+	layout1.clear( ColorA( 1.0f, 1.0f, 1.0f, 0.0f ) );
+	layout1.setFont( Font( "Arial", 34 ) );
+	layout1.setColor( ColorA( 255.0f/255.0f, 255.0f/255.0f, 8.0f/255.0f, 1.0f ) );
+	layout1.addLine( to_string(getAverageFps()) ); //to_string is a c++11 function for conversions
+	Surface8u rendered1 = layout1.render( true, false );
+  gl::Texture fontTexture_FR = gl::Texture( rendered1 );
+  
+  //draw framerate
+  fontTexture_FR.bind();
+  gl::drawBillboard(Vec3f(-3.0f, 7.0f, 0.0f), Vec2f(fontTexture_FR.getWidth()/20.0f , fontTexture_FR.getHeight()/20.0f), 0, camRight, camUp);
+  fontTexture_FR.unbind();
 }
 
 void DeferredRenderingAdvancedApp::drawDepthParticles() const
