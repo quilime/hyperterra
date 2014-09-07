@@ -19,6 +19,8 @@
 #include "boost/bind.hpp"
 #include "boost/lambda/lambda.hpp"
 
+//#include "boost/python.hpp"
+
 #include "DeferredRenderer.h"
 
 #include "Resources.h"
@@ -33,7 +35,7 @@ static const Vec3f	CAM_POSITION_INIT( -14.0f, 7.0f, -14.0f );
 static const Vec3f	LIGHT_POSITION_INIT( 3.0f, 1.5f, 0.0f );
 
 
-class DeferredRenderingAdvancedApp : public AppBasic
+class LandscapeApp : public AppBasic
 {
 public:
     void prepareSettings( Settings *settings );
@@ -71,7 +73,7 @@ protected:
 
 #pragma mark - lifecycle functions
 
-void DeferredRenderingAdvancedApp::prepareSettings( Settings *settings )
+void LandscapeApp::prepareSettings( Settings *settings )
 {
 	settings->setWindowSize( APP_RES_HORIZONTAL, APP_RES_VERTICAL );
   settings->setBorderless( false );
@@ -83,7 +85,7 @@ void DeferredRenderingAdvancedApp::prepareSettings( Settings *settings )
 	//settings->enableSecondaryDisplayBlanking( false );
 }
 
-void DeferredRenderingAdvancedApp::setup()
+void LandscapeApp::setup()
 {
     //!!test texture for diffuse texture
   
@@ -113,10 +115,10 @@ void DeferredRenderingAdvancedApp::setup()
   mMayaCam.setCurrentCam(mCam);
   
   //create functions pointers to send to deferred renderer
-  boost::function<void(gl::GlslProg*)> fRenderShadowCastersFunc = boost::bind( &DeferredRenderingAdvancedApp::drawShadowCasters, this, boost::lambda::_1 );
-  boost::function<void(gl::GlslProg*)> fRenderNotShadowCastersFunc = boost::bind( &DeferredRenderingAdvancedApp::drawNonShadowCasters, this,  boost::lambda::_1 );
-  boost::function<void(void)> fRenderOverlayFunc = boost::bind( &DeferredRenderingAdvancedApp::drawOverlay, this );
-  boost::function<void(void)> fRenderParticlesFunc = boost::bind( &DeferredRenderingAdvancedApp::drawDepthParticles, this );
+  boost::function<void(gl::GlslProg*)> fRenderShadowCastersFunc = boost::bind( &LandscapeApp::drawShadowCasters, this, boost::lambda::_1 );
+  boost::function<void(gl::GlslProg*)> fRenderNotShadowCastersFunc = boost::bind( &LandscapeApp::drawNonShadowCasters, this,  boost::lambda::_1 );
+  boost::function<void(void)> fRenderOverlayFunc = boost::bind( &LandscapeApp::drawOverlay, this );
+  boost::function<void(void)> fRenderParticlesFunc = boost::bind( &LandscapeApp::drawDepthParticles, this );
   
   //NULL value represents the opportunity to a function pointer to an "overlay" method. Basically only basic textures can be used and it is overlayed onto the final scene.
   //see example of such a function (from another project) commented out at the bottom of this class ...
@@ -143,14 +145,14 @@ void DeferredRenderingAdvancedApp::setup()
   
 }
 
-void DeferredRenderingAdvancedApp::update()
+void LandscapeApp::update()
 {
     mCam = mMayaCam.getCamera();
     mDeferredRenderer.mCam = &mCam;
 	mCurrFramerate = getAverageFps();
 }
 
-void DeferredRenderingAdvancedApp::draw()
+void LandscapeApp::draw()
 {
     mDeferredRenderer.renderFullScreenQuad(RENDER_MODE);
     
@@ -159,7 +161,7 @@ void DeferredRenderingAdvancedApp::draw()
     }
 }
 
-void DeferredRenderingAdvancedApp::keyDown( KeyEvent event )
+void LandscapeApp::keyDown( KeyEvent event )
 {
     float lightMovInc = 0.25f;
     
@@ -260,14 +262,14 @@ void DeferredRenderingAdvancedApp::keyDown( KeyEvent event )
 	}
 }
 
-void DeferredRenderingAdvancedApp::mouseDown( MouseEvent event )
+void LandscapeApp::mouseDown( MouseEvent event )
 {
     if( event.isAltDown() ) {
       mMayaCam.mouseDown( event.getPos() );
     }
 }
 
-void DeferredRenderingAdvancedApp::mouseDrag( MouseEvent event )
+void LandscapeApp::mouseDrag( MouseEvent event )
 {
     if( event.isAltDown() ) {
       mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
@@ -276,7 +278,7 @@ void DeferredRenderingAdvancedApp::mouseDrag( MouseEvent event )
 
 #pragma mark - render functions
 
-void DeferredRenderingAdvancedApp::drawShadowCasters(gl::GlslProg* deferShader) const
+void LandscapeApp::drawShadowCasters(gl::GlslProg* deferShader) const
 {
   gl::pushMatrices();
   gl::scale(1.3f, 1.3f, 1.3f);
@@ -284,7 +286,7 @@ void DeferredRenderingAdvancedApp::drawShadowCasters(gl::GlslProg* deferShader) 
   gl::popMatrices();
 }
 
-void DeferredRenderingAdvancedApp::drawNonShadowCasters(gl::GlslProg* deferShader) const
+void LandscapeApp::drawNonShadowCasters(gl::GlslProg* deferShader) const
 {
     int size = 3000;
     //a plane to capture shadows (though it won't cast any itself)
@@ -298,7 +300,7 @@ void DeferredRenderingAdvancedApp::drawNonShadowCasters(gl::GlslProg* deferShade
     glEnd();
 }
 
-void DeferredRenderingAdvancedApp::drawOverlay() const
+void LandscapeApp::drawOverlay() const
 {
   Vec3f camUp, camRight;
   mCam.getBillboardVectors(&camRight, &camUp);
@@ -318,8 +320,8 @@ void DeferredRenderingAdvancedApp::drawOverlay() const
   fontTexture_FR.unbind();
 }
 
-void DeferredRenderingAdvancedApp::drawDepthParticles() const
+void LandscapeApp::drawDepthParticles() const
 {
 }
 
-CINDER_APP_BASIC( DeferredRenderingAdvancedApp, RendererGl )
+CINDER_APP_BASIC( LandscapeApp, RendererGl )
