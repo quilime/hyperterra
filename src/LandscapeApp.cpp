@@ -19,9 +19,9 @@
 #include "boost/bind.hpp"
 #include "boost/lambda/lambda.hpp"
 
-//#include "boost/python.hpp"
+#include "boost/python.hpp"
 
-#include "Python.h"
+//#include "Python.h"
 
 #include "DeferredRenderer.h"
 
@@ -143,24 +143,20 @@ void LandscapeApp::setup()
   
   
 
-  
+  // object loading
+  TriMesh       mMesh;
+  gl::VboMesh   mVBO;
   
   
   
   
   /////////////////////////////////////
   // python stuff
-  fs::path path = getAssetPath("scripts/hello.py");
-  console() << "lives at: " << path << std::endl;
-  
-  // object loading
-  TriMesh       mMesh;
-  gl::VboMesh   mVBO;
+  fs::path path = getAssetPath("scripts/bodies.py");
+  console() << path << std::endl;
   
   Py_Initialize();
-  
-  PyRun_SimpleString("import hello");
-  PyRun_SimpleString("hello.hello()");
+  PyRun_SimpleString("import ephem");
   
   Py_Finalize();
   
