@@ -84,19 +84,26 @@ def printPosition(body):
     (pitchToVernacular(altitude),altitude,\
         ('above' if altitude > 0 else 'below'))    
 
+def getAzimuth(body):
+    body.compute(position)
+    return math.degrees(float(body.az))
 
-if __name__ == '__main__':
-    print "UTC " + str(ephem.now())
-    print 'Observer position: ' + currPosStr
-    print "lng, lat, alt"
-    print currentPosition
+def getAltitude(body):
+    body.compute(position)
+    return math.degrees(float(body.alt))
 
-    print "\nsun:"
-    printPosition(ephem.Moon())
+# if __name__ == '__main__':
+#     print "UTC " + str(ephem.now())
+#     print 'Observer position: ' + currPosStr
+#     print "lng, lat, alt"
+#     print currentPosition
 
-    print "\nmoon:"
-    printPosition(ephem.Sun())
-    #printCurrentSolarPosition()
+#     print "\nsun:"
+#     printPosition(ephem.Moon())
+
+#     print "\nmoon:"
+#     printPosition(ephem.Sun())
+#     #printCurrentSolarPosition()
 
 
 

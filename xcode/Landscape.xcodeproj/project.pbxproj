@@ -22,6 +22,7 @@
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		68025A2719BBE031008D3D78 /* landscape.obj in Resources */ = {isa = PBXBuildFile; fileRef = 68025A2619BBE031008D3D78 /* landscape.obj */; };
 		687DB31A19BBE1C300CBEF36 /* landscape-split.obj in Resources */ = {isa = PBXBuildFile; fileRef = 687DB31919BBE1C300CBEF36 /* landscape-split.obj */; };
+		687DB31C19BCF10D00CBEF36 /* ephemScript.py in Resources */ = {isa = PBXBuildFile; fileRef = 687DB31B19BCF10D00CBEF36 /* ephemScript.py */; };
 		6AE00A9C5282426AA6E4E3BC /* Deferred_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = D4F8043318F14E35A010D381 /* Deferred_glsl.frag */; };
 		72F17C62A1474A528FBCA1C3 /* Deferred_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = CBB2D174335343FFB928748B /* Deferred_glsl.vert */; };
 		7EC6907D5D4A47DCBDFBDBB4 /* BasicBlender_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = F421B93CC2BD4EDC8B3BFE82 /* BasicBlender_glsl.frag */; };
@@ -62,6 +63,7 @@
 		6213799EF947463F9E24FDF4 /* LandscapeApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = LandscapeApp.cpp; path = ../src/LandscapeApp.cpp; sourceTree = "<group>"; };
 		68025A2619BBE031008D3D78 /* landscape.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = landscape.obj; path = ../resources/landscape.obj; sourceTree = "<group>"; };
 		687DB31919BBE1C300CBEF36 /* landscape-split.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "landscape-split.obj"; path = "../resources/landscape-split.obj"; sourceTree = "<group>"; };
+		687DB31B19BCF10D00CBEF36 /* ephemScript.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = ephemScript.py; path = ../resources/ephemScript.py; sourceTree = "<group>"; };
 		6981771C2CC44CB89EA1E4D9 /* Blur_v_glsl.frag */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; name = Blur_v_glsl.frag; path = "../blocks/Cinder Deferred Renderer/resources/CinderDeferredResources/shaders/Blur_v_glsl.frag"; sourceTree = "<group>"; };
 		83E863FFDBFD4A00AA7559D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		879F07AB68E34DE0BB68BF17 /* CubeShadowMap_glsl.vert */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; name = CubeShadowMap_glsl.vert; path = "../blocks/Cinder Deferred Renderer/resources/CinderDeferredResources/shaders/CubeShadowMap_glsl.vert"; sourceTree = "<group>"; };
@@ -165,7 +167,6 @@
 		29B97315FDCFA39411CA2CEA /* Headers */ = {
 			isa = PBXGroup;
 			children = (
-				9341F64201E34173B643662A /* Resources.h */,
 				3F53255CB4A146E6A6AC0DAF /* Landscape_Prefix.pch */,
 			);
 			name = Headers;
@@ -174,6 +175,8 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				687DB31B19BCF10D00CBEF36 /* ephemScript.py */,
+				9341F64201E34173B643662A /* Resources.h */,
 				687DB31919BBE1C300CBEF36 /* landscape-split.obj */,
 				68025A2619BBE031008D3D78 /* landscape.obj */,
 				15C593354ACD41FCA89D1076 /* CinderApp.icns */,
@@ -320,6 +323,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5132B52A8EDB4673A095BA39 /* CinderApp.icns in Resources */,
+				687DB31C19BCF10D00CBEF36 /* ephemScript.py in Resources */,
 				8F7E9F18CB184647867485BB /* random.png in Resources */,
 				687DB31A19BBE1C300CBEF36 /* landscape-split.obj in Resources */,
 				EDF94F8B6357436BBCDC591D /* AlphaToRGB_glsl.vert in Resources */,
@@ -377,7 +381,7 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				ONLY_ACTIVE_ARCH = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"\"$(CINDER_PATH)/lib/libcinder_d.a\"",
 					"-L/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",
@@ -414,7 +418,7 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				ONLY_ACTIVE_ARCH = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"\"$(CINDER_PATH)/lib/libcinder.a\"",
 					"-L/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",

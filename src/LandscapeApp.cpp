@@ -1,7 +1,3 @@
-//What is this?
-//A Cinder app that utilizes a deferred rendering engine to render lights and SSAO. There is also point-light shadow-mapping (heavy GPU cost though very nice)
-//anthony.scavarelli@gmail.com
-
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Camera.h"
@@ -18,32 +14,30 @@
 #include "boost/function.hpp"
 #include "boost/bind.hpp"
 #include "boost/lambda/lambda.hpp"
-
 #include "boost/python.hpp"
 
-//#include "Python.h"
-
 #include "DeferredRenderer.h"
-
 #include "Resources.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+
 static const float	APP_RES_HORIZONTAL = 1024.0f;
 static const float	APP_RES_VERTICAL = 768.0f;
 static const Vec3f	CAM_POSITION_INIT( -14.0f, 7.0f, -14.0f );
 static const Vec3f	LIGHT_POSITION_INIT( 3.0f, 1.5f, 0.0f );
 
-
 class LandscapeApp : public AppBasic
 {
-public:
+  public:
     void prepareSettings( Settings *settings );
     void setup();
     void update();
     void draw();
+    void shutdown();
+  
     void keyDown( app::KeyEvent event );
     void mouseDown( MouseEvent event );
     void mouseDrag( MouseEvent event );
@@ -51,29 +45,30 @@ public:
     void drawShadowCasters(gl::GlslProg* deferShader) const;
     void drawNonShadowCasters(gl::GlslProg* deferShader) const;
     void drawOverlay() const;
-    void drawDepthParticles() const;
-    
-protected:
-    int RENDER_MODE;
-	
+  
+    void initPython();
+  
+  protected:
     //debug
     cinder::params::InterfaceGl mParams;
-    bool				mShowParams;
-    float				mCurrFramerate;
+    int RENDER_MODE;
+    bool mShowParams;
+    float	mCurrFramerate;
 	
     //camera
-    MayaCamUI           mMayaCam;   //need a camera that will allow mCam to mirror it as MayaCamUI doesn't current allow a non const reference to its CameraPersp
-    CameraPersp         mCam;
-    DeferredRenderer    mDeferredRenderer;
-    
+    MayaCamUI mMayaCam;
+    CameraPersp mCam;
+  
+    // renderer
+    DeferredRenderer mDeferredRenderer;
     int mCurrLightIndex;
   
-  // object loading
-  TriMesh       mMesh;
-  gl::VboMesh   mVBO;
+    // object loading
+    TriMesh mMesh;
+    gl::VboMesh mVBO;
 };
 
-#pragma mark - lifecycle functions
+
 
 void LandscapeApp::prepareSettings( Settings *settings )
 {
@@ -120,7 +115,6 @@ void LandscapeApp::setup()
   boost::function<void(gl::GlslProg*)> fRenderShadowCastersFunc = boost::bind( &LandscapeApp::drawShadowCasters, this, boost::lambda::_1 );
   boost::function<void(gl::GlslProg*)> fRenderNotShadowCastersFunc = boost::bind( &LandscapeApp::drawNonShadowCasters, this,  boost::lambda::_1 );
   boost::function<void(void)> fRenderOverlayFunc = boost::bind( &LandscapeApp::drawOverlay, this );
-  boost::function<void(void)> fRenderParticlesFunc = boost::bind( &LandscapeApp::drawDepthParticles, this );
   
   //NULL value represents the opportunity to a function pointer to an "overlay" method. Basically only basic textures can be used and it is overlayed onto the final scene.
   //see example of such a function (from another project) commented out at the bottom of this class ...
@@ -136,10 +130,10 @@ void LandscapeApp::setup()
   mDeferredRenderer.addPointLight(    Vec3f(-2.0f, 4.0f, 6.0f),
                                   blue * LIGHT_BRIGHTNESS_DEFAULT * 0.65, true);      //blue
 
-    mDeferredRenderer.addPointLight(    Vec3f(4.0f, 6.0f, -4.0f),      Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);      //red
+  mDeferredRenderer.addPointLight(    Vec3f(4.0f, 6.0f, -4.0f),      Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);      //red
 
     
-    mCurrLightIndex = 0;
+  mCurrLightIndex = 0;
   
   
 
@@ -147,40 +141,69 @@ void LandscapeApp::setup()
   TriMesh       mMesh;
   gl::VboMesh   mVBO;
   
-  
-  
+  initPython();
+}
+
+void LandscapeApp::shutdown()
+{
+  // end python
+//  Py_Finalize();
+  console() << "done" << std::endl;
+}
+
+void LandscapeApp::initPython() {
   
   /////////////////////////////////////
   // python stuff
-  fs::path path = getAssetPath("scripts/bodies.py");
-  console() << path << std::endl;
+  fs::path ephemScriptPath = getResourcePath(RES_EPHEM_SCRIPT);
   
   Py_Initialize();
+  
+  
+//  PyRun_SimpleString("result = 5 ** 2");
+//  
+//  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
+//  
+//  assert(module);                                     // __main__ should always exist
+//  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
+//  assert(dictionary);                                 // __main__ should have a dictionary
+//  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
+//  
+//  assert(result);                                     // just added result
+//  assert(PyInt_Check(result));                        // result should be an integer
+//  long result_value = PyInt_AS_LONG(result);          // already checked that it is an int
+//  
+  
   PyRun_SimpleString("import ephem");
+//  PyRun_SimpleString("import imp");
+//  char cmd [100];
+//  sprintf (cmd, "ephemScript = imp.load_source('ephemScript', '%s')", ephemScriptPath.c_str());
+//  PyRun_SimpleString(cmd);
+//  PyRun_SimpleString("ephemScript.printPosition(ephem.Sun())");
+//
+
   
   Py_Finalize();
-  
 }
 
 void LandscapeApp::update()
 {
-    mCam = mMayaCam.getCamera();
-    mDeferredRenderer.mCam = &mCam;
+  mCam = mMayaCam.getCamera();
+  mDeferredRenderer.mCam = &mCam;
 	mCurrFramerate = getAverageFps();
 }
 
 void LandscapeApp::draw()
 {
-    mDeferredRenderer.renderFullScreenQuad(RENDER_MODE);
-    
+  mDeferredRenderer.renderFullScreenQuad(RENDER_MODE);
 	if (mShowParams) {
 		mParams.draw();
-    }
+  }
 }
 
 void LandscapeApp::keyDown( KeyEvent event )
 {
-    float lightMovInc = 0.25f;
+  float lightMovInc = 0.25f;
     
 	switch ( event.getCode() )
 	{
@@ -293,7 +316,7 @@ void LandscapeApp::mouseDrag( MouseEvent event )
     }
 }
 
-#pragma mark - render functions
+
 
 void LandscapeApp::drawShadowCasters(gl::GlslProg* deferShader) const
 {
@@ -337,8 +360,9 @@ void LandscapeApp::drawOverlay() const
   fontTexture_FR.unbind();
 }
 
-void LandscapeApp::drawDepthParticles() const
-{
-}
+
+
+
+
 
 CINDER_APP_BASIC( LandscapeApp, RendererGl )

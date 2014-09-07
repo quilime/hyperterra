@@ -4,6 +4,8 @@
 //#define RES_MY_RES			CINDER_RESOURCE( ../resources/, image_name.png, 128, IMAGE )
 
 #define RES_LANDSCAPE_OBJ CINDER_RESOURCE( ../resources/, landscape-split.obj,   128, DATA )
+#define RES_EPHEM_SCRIPT CINDER_RESOURCE( ../resources/, ephemScript.py,   128, SCRIPT )
+
 
 
 #define RES_TEX_NOISE_SAMPLER		CINDER_RESOURCE( ../blocks/Cinder Deferred Renderer/resources/CinderDeferredResources/textures/, random.png, 128, IMAGE )
