@@ -66,6 +66,10 @@ class LandscapeApp : public AppBasic
     // object loading
     TriMesh mMesh;
     gl::VboMesh mVBO;
+  
+    // light positions
+    Vec2<double> getSunPosition(long UTCtimestamp);
+    Vec2<double> getMoonPosition(long UTCtimestamp);
 };
 
 
@@ -147,7 +151,7 @@ void LandscapeApp::setup()
 void LandscapeApp::shutdown()
 {
   // end python
-//  Py_Finalize();
+  Py_Finalize();
   console() << "done" << std::endl;
 }
 
@@ -160,35 +164,61 @@ void LandscapeApp::initPython() {
   Py_Initialize();
   
   PyRun_SimpleString("import imp");
-  PyRun_SimpleString("import ephem");  
+  PyRun_SimpleString("import ephem");
   char cmd [200];
   sprintf (cmd, "ephemScript = imp.load_source('ephemScript', '%s')", ephemScriptPath.c_str());
   PyRun_SimpleString(cmd);
-  PyRun_SimpleString("ephemScript.printPosition(ephem.Sun())");
-  
-  
-//  // simple string
-//  if (false) {
-//  PyRun_SimpleString("result = 5 ** 2");
-//  
-//  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
-//  
-//  assert(module);                                     // __main__ should always exist
-//  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
-//  assert(dictionary);                                 // __main__ should have a dictionary
-//  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
-//  
-//  assert(result);                                     // just added result
-//  assert(PyInt_Check(result));                        // result should be an integer
-//  long result_value = PyInt_AS_LONG(result);          // already checked that it is an int
-//  console() << result_value << std::endl;
-//  }
-  
   
 
+  console() << "sun: " << getSunPosition(1410126987) << endl;
+  console() << "moon: " << getMoonPosition(1410126987) << endl;
   
-  Py_Finalize();
+
 }
+
+Vec2<double> LandscapeApp::getSunPosition(long UTCtimestamp) {
+  
+  // this is ridiculously messy, just hacking it to make it work atm x_x
+  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Sun(), ephem.now())");
+  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
+  assert(module);                                     // __main__ should always exist
+  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
+  assert(dictionary);                                 // __main__ should have a dictionary
+  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
+  assert(result);                                     // just added result
+  assert(PyFloat_Check(result));                      // result should be a float
+  float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
+  
+  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Sun(), ephem.now())");
+  PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
+  assert(result2);                                     // just added result
+  assert(PyFloat_Check(result2));                      // result should be a float
+  float altitude = PyFloat_AsDouble(result2);          // already checked that it is an int
+  
+  return Vec2<double>(azimuth, altitude);
+}
+Vec2<double> LandscapeApp::getMoonPosition(long UTCtimestamp) {
+  
+  // this is ridiculously messy, just hacking it to make it work atm x_x
+  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Moon(), ephem.now())");
+  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
+  assert(module);                                     // __main__ should always exist
+  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
+  assert(dictionary);                                 // __main__ should have a dictionary
+  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
+  assert(result);                                     // just added result
+  assert(PyFloat_Check(result));                      // result should be a float
+  float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
+  
+  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Moon(), ephem.now())");
+  PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
+  assert(result2);                                     // just added result
+  assert(PyFloat_Check(result2));                      // result should be a float
+  float altitude = PyFloat_AsDouble(result2);          // already checked that it is an int
+  
+  return Vec2<double>(azimuth, altitude);
+}
+
 
 void LandscapeApp::update()
 {

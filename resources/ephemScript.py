@@ -84,11 +84,13 @@ def printPosition(body):
     (pitchToVernacular(altitude),altitude,\
         ('above' if altitude > 0 else 'below'))    
 
-def getAzimuth(body):
+def getAzimuth(body, timestamp):
+    position.date = timestamp
     body.compute(position)
     return math.degrees(float(body.az))
 
-def getAltitude(body):
+def getAltitude(body, timestamp):
+    position.date = timestamp
     body.compute(position)
     return math.degrees(float(body.alt))
 
