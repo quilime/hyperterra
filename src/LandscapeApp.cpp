@@ -21,6 +21,8 @@
 
 //#include "boost/python.hpp"
 
+#include "Python.h"
+
 #include "DeferredRenderer.h"
 
 #include "Resources.h"
@@ -139,9 +141,28 @@ void LandscapeApp::setup()
     
     mCurrLightIndex = 0;
   
+  
+
+  
+  
+  
+  
+  
+  /////////////////////////////////////
+  // python stuff
+  fs::path path = getAssetPath("scripts/hello.py");
+  console() << "lives at: " << path << std::endl;
+  
   // object loading
   TriMesh       mMesh;
   gl::VboMesh   mVBO;
+  
+  Py_Initialize();
+  
+  PyRun_SimpleString("import hello");
+  PyRun_SimpleString("hello.hello()");
+  
+  Py_Finalize();
   
 }
 
