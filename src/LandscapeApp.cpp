@@ -128,14 +128,12 @@ void LandscapeApp::setup()
   //mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, fRenderOverlayFunc, fRenderParticlesFunc, &mMayaCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true ); //overlay and "particles" enabled -- not working yet
   
   //have these cast point light shadows
-  Color white = Color(1.0f, 1.0f, 1.0f);
-  Color blue = Color(0.2f, 1.0f, 1.0f);
-
-  mDeferredRenderer.addPointLight(    Vec3f(-2.0f, 4.0f, 6.0f),
-                                  blue * LIGHT_BRIGHTNESS_DEFAULT * 0.65, true);      //blue
-
-  mDeferredRenderer.addPointLight(    Vec3f(4.0f, 6.0f, -4.0f),      Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);      //red
-
+  
+  Color sun = Color(1.0f, 1.0f, 0.9f);
+  mDeferredRenderer.addPointLight( Vec3f(0,0,0), sun * LIGHT_BRIGHTNESS_DEFAULT * 0.65, true);
+  
+  Color moon = Color(0.24f, 0.15f, 0.94f);
+  mDeferredRenderer.addPointLight( Vec3f(0,0,0), moon * LIGHT_BRIGHTNESS_DEFAULT * 0.2, true);
     
   mCurrLightIndex = 0;
   
@@ -144,7 +142,9 @@ void LandscapeApp::setup()
   // object loading
   TriMesh       mMesh;
   gl::VboMesh   mVBO;
-  
+ 
+  // start python
+  Py_Initialize();
   initPython();
 }
 
@@ -155,76 +155,56 @@ void LandscapeApp::shutdown()
   console() << "done" << std::endl;
 }
 
-void LandscapeApp::initPython() {
-  
-  /////////////////////////////////////
-  // python stuff
-  fs::path ephemScriptPath = getResourcePath(RES_EPHEM_SCRIPT);
-  
-  Py_Initialize();
-  
-  PyRun_SimpleString("import imp");
-  PyRun_SimpleString("import ephem");
-  char cmd [200];
-  sprintf (cmd, "ephemScript = imp.load_source('ephemScript', '%s')", ephemScriptPath.c_str());
-  PyRun_SimpleString(cmd);
-  
-
-  console() << "sun: " << getSunPosition(1410126987) << endl;
-  console() << "moon: " << getMoonPosition(1410126987) << endl;
-  
-
-}
-
-Vec2<double> LandscapeApp::getSunPosition(long UTCtimestamp) {
-  
-  // this is ridiculously messy, just hacking it to make it work atm x_x
-  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Sun(), ephem.now())");
-  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
-  assert(module);                                     // __main__ should always exist
-  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
-  assert(dictionary);                                 // __main__ should have a dictionary
-  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
-  assert(result);                                     // just added result
-  assert(PyFloat_Check(result));                      // result should be a float
-  float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
-  
-  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Sun(), ephem.now())");
-  PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
-  assert(result2);                                     // just added result
-  assert(PyFloat_Check(result2));                      // result should be a float
-  float altitude = PyFloat_AsDouble(result2);          // already checked that it is an int
-  
-  return Vec2<double>(azimuth, altitude);
-}
-Vec2<double> LandscapeApp::getMoonPosition(long UTCtimestamp) {
-  
-  // this is ridiculously messy, just hacking it to make it work atm x_x
-  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Moon(), ephem.now())");
-  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
-  assert(module);                                     // __main__ should always exist
-  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
-  assert(dictionary);                                 // __main__ should have a dictionary
-  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
-  assert(result);                                     // just added result
-  assert(PyFloat_Check(result));                      // result should be a float
-  float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
-  
-  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Moon(), ephem.now())");
-  PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
-  assert(result2);                                     // just added result
-  assert(PyFloat_Check(result2));                      // result should be a float
-  float altitude = PyFloat_AsDouble(result2);          // already checked that it is an int
-  
-  return Vec2<double>(azimuth, altitude);
-}
-
 
 void LandscapeApp::update()
 {
   mCam = mMayaCam.getCamera();
   mDeferredRenderer.mCam = &mCam;
 	mCurrFramerate = getAverageFps();
+  
+  Vec2<float> sunPos = getSunPosition(std::time(0));
+  Vec2<float> moonPos = getMoonPosition(std::time(0));
+  
+  // rotate lights
+  float lightDistance = 14.0f;
+  mDeferredRenderer.getCubeLightsRef()->at(0)->setPos(
+    Vec3f(
+      lightDistance * math<float>::cos ( sunPos.y/360 ) * math<float>::cos ( sunPos.x/360 ),
+//      math<float>::sin(),
+      lightDistance * math<float>::sin ( sunPos.y/360 ),
+      lightDistance * math<float>::cos ( sunPos.y/360 ) * math<float>::sin ( sunPos.x/360 )
+      ));
+  
+  mDeferredRenderer.getCubeLightsRef()->at(1)->setPos(
+    Vec3f(
+          lightDistance * math<float>::cos ( moonPos.y/360 ) * math<float>::cos ( moonPos.x/360 ),
+          //      math<float>::sin(),
+          lightDistance * math<float>::sin ( moonPos.y/360 ),
+          lightDistance * math<float>::cos ( moonPos.y/360 ) * math<float>::sin ( moonPos.x/360 )
+          ));
+//      math<float>::cos(getElapsedSeconds() + (M_PI)) * lightDistance ));
+  
+  /*
+   float lightDistance = 10.0f;
+   mDeferredRenderer.getCubeLightsRef()->at(0)->setPos(
+   Vec3f(
+   math<float>::sin(getElapsedSeconds() + (M_PI)) * lightDistance,
+   5.0f,
+   math<float>::cos(getElapsedSeconds() + (M_PI)) * lightDistance ));
+   */
+  
+//  //moving some lights for effect
+//  int counter = 0;
+//  for( vector<Light_Point*>::iterator lightIter = mDeferredRenderer.mCubeLights.begin(); lightIter != mDeferredRenderer.mCubeLights.end(); lightIter++ ) {
+//    (*lightIter)->setPos(
+//                         Vec3f(
+//                               math<float>::sin(getElapsedSeconds() + (M_PI * counter)) * 5.0f,
+//                               5.0f,
+//                               math<float>::cos(getElapsedSeconds() + (M_PI * counter)) * 5.0f ));
+//    counter++;
+//  }
+  
+//  console() << std::time(0) << endl;
 }
 
 void LandscapeApp::draw()
@@ -394,7 +374,63 @@ void LandscapeApp::drawOverlay() const
   fontTexture_FR.unbind();
 }
 
+void LandscapeApp::initPython() {
+  
+  fs::path ephemScriptPath = getResourcePath(RES_EPHEM_SCRIPT);
+  
+  PyRun_SimpleString("import imp");
+  PyRun_SimpleString("import ephem");
+  char cmd [200];
+  sprintf (cmd, "ephemScript = imp.load_source('ephemScript', '%s')", ephemScriptPath.c_str());
+  PyRun_SimpleString(cmd);
+  
+  console() << "sun: " << getSunPosition(std::time(0)) << endl;
+  console() << "moon: " << getMoonPosition(std::time(0)) << endl;
+  
+}
 
+Vec2<double> LandscapeApp::getSunPosition(long UTCtimestamp) {
+  
+  // this is ridiculously messy, just hacking it to make it work atm x_x
+  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Sun(), ephem.now())");
+  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
+  assert(module);                                     // __main__ should always exist
+  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
+  assert(dictionary);                                 // __main__ should have a dictionary
+  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
+  assert(result);                                     // just added result
+  assert(PyFloat_Check(result));                      // result should be a float
+  float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
+  
+  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Sun(), ephem.now())");
+  PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
+  assert(result2);                                     // just added result
+  assert(PyFloat_Check(result2));                      // result should be a float
+  float altitude = PyFloat_AsDouble(result2);          // already checked that it is an int
+  
+  return Vec2<double>(azimuth, altitude);
+}
+Vec2<double> LandscapeApp::getMoonPosition(long UTCtimestamp) {
+  
+  // this is ridiculously messy, just hacking it to make it work atm x_x
+  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Moon(), ephem.now())");
+  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
+  assert(module);                                     // __main__ should always exist
+  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
+  assert(dictionary);                                 // __main__ should have a dictionary
+  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
+  assert(result);                                     // just added result
+  assert(PyFloat_Check(result));                      // result should be a float
+  float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
+  
+  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Moon(), ephem.now())");
+  PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
+  assert(result2);                                     // just added result
+  assert(PyFloat_Check(result2));                      // result should be a float
+  float altitude = PyFloat_AsDouble(result2);          // already checked that it is an int
+  
+  return Vec2<double>(azimuth, altitude);
+}
 
 
 
