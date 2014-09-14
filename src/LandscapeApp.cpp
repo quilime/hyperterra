@@ -19,6 +19,8 @@
 #include "DeferredRenderer.h"
 #include "Resources.h"
 
+#include <chrono>
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -28,6 +30,11 @@ static const float	APP_RES_HORIZONTAL = 1024.0f;
 static const float	APP_RES_VERTICAL = 768.0f;
 static const Vec3f	CAM_POSITION_INIT( -14.0f, 7.0f, -14.0f );
 static const Vec3f	LIGHT_POSITION_INIT( 3.0f, 1.5f, 0.0f );
+
+struct AzmAlt {
+  double azm;
+  double alt;
+};
 
 class LandscapeApp : public AppBasic
 {
@@ -46,7 +53,6 @@ class LandscapeApp : public AppBasic
     void drawNonShadowCasters(gl::GlslProg* deferShader) const;
     void drawOverlay() const;
   
-    void initPython();
   
   protected:
     //debug
@@ -68,13 +74,21 @@ class LandscapeApp : public AppBasic
     gl::VboMesh mVBO;
   
     // light positions
-    Vec2<double> getSunPosition(long UTCtimestamp);
-    Vec2<double> getMoonPosition(long UTCtimestamp);
+    AzmAlt getSunPosition(double hours);
+    AzmAlt getMoonPosition(double hours);
   
-    long mCurTime;
+    // python
+    PyObject* py_ephem;
+    PyObject* py_em;
   
-    Vec2<double> mSunPos;
-    Vec2<double> mMoonPos;
+  
+  
+    // time
+    double mTimeHours;
+    double getNowHours();
+
+    AzmAlt mSunPos;
+    AzmAlt mMoonPos;
   
     int count;
 };
@@ -137,24 +151,62 @@ void LandscapeApp::setup()
   //have these cast point light shadows
   
   Color sun = Color(1.0f, 1.0f, 0.9f);
-  mDeferredRenderer.addPointLight( Vec3f(0,0,0), sun * LIGHT_BRIGHTNESS_DEFAULT * 0.65, true);
+  mDeferredRenderer.addPointLight( Vec3f(0,0,0), sun * LIGHT_BRIGHTNESS_DEFAULT * 2.0, true);
   
   Color moon = Color(0.24f, 0.15f, 0.94f);
   mDeferredRenderer.addPointLight( Vec3f(0,0,0), moon * LIGHT_BRIGHTNESS_DEFAULT * 0.2, true);
-    
+  
   mCurrLightIndex = 0;
   
-  mCurTime = std::time(0);
+//  mCurTime = std::time(0);
   count = 0;
 
   // object loading
   TriMesh       mMesh;
   gl::VboMesh   mVBO;
+  
+  // time
+//  mChronoTimePoint = chrono::high_resolution_clock::now();
+//  console() << chrono::duration_cast<chrono::seconds>(mChronoTimePoint.time_since_epoch()).count() << endl;
+  
+//  std::chrono::time_point<std::chrono::system_clock> p1, now, p3;
+//  
+//  now = std::chrono::system_clock::now();
+//  
+//  std::time_t epoch_time = std::chrono::system_clock::to_time_t(p1);
+//  std::cout << "epoch: " << std::ctime(&epoch_time);
+//  
+//  std::time_t today_time = std::chrono::system_clock::to_time_t(now);
+//  std::cout << "today: " << std::ctime(&today_time);
+//  
+//  mTimeHours  = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+//  mTimeHours /= 60; // seconds
+//  mTimeHours /= 60; // hours
+//  
+//  std::cout << "hours since epoch: " << mTimeHours << '\n';
  
+  
   // start python
   Py_Initialize();
-  initPython();
+  // import our script
+  py_ephem = PyImport_Import(PyString_FromString((char*)"ephem"));
+  py_em = PyImport_Import(PyString_FromString((char*)"ephemScript"));
+  
+  mTimeHours = getNowHours();
+  
+  console() << "mTimeHours: " << mTimeHours << endl;
+  
+//  console() << "getSunPos: " << getSunPosition(mTimeHours) << endl;
 }
+
+
+double LandscapeApp::getNowHours() {
+  PyObject* getNowHours = PyObject_GetAttrString(py_em,(char*)"getNowHours");
+  PyObject* args = NULL;
+  PyObject* myResult = PyObject_CallObject(getNowHours, args);
+  return PyFloat_AsDouble(myResult);
+}
+
 
 void LandscapeApp::shutdown()
 {
@@ -170,74 +222,24 @@ void LandscapeApp::update()
   mDeferredRenderer.mCam = &mCam;
 	mCurrFramerate = getAverageFps();
 
-  
+  mTimeHours -= 1.0 / 24.0 / 60.0;
+  mSunPos  = getSunPosition(mTimeHours);
+  mMoonPos = getMoonPosition(mTimeHours);
 
-  
-  
-  
-  count++;
-  
-  if (count > 10) {
-    count = 0;
-    mCurTime += 1;
-
-    mSunPos = getSunPosition(std::time(0));
-    mMoonPos = getMoonPosition(std::time(0));
-    
-    console() << std::time(0) << endl;
-//    console() << mCurTime << endl;
-    console() << mSunPos << endl;
-    console() << mMoonPos << endl;
-    
-//    mSunPos.x /= 360.0f;
-//    mSunPos.y /= 360.0f;
-  
-//    mMoonPos.x /= 360.0f;
-//    mMoonPos.y /= 360.0f;
-  }
-  
-  
-  
-  // rotate lights
   float lightDistance = 14.0f;
-  mDeferredRenderer.getCubeLightsRef()->at(0)->setPos(
-    Vec3f(
-      lightDistance * math<float>::cos ( mSunPos.y ) * math<float>::cos ( mSunPos.x ),
-//      math<float>::sin(),
-      lightDistance * math<float>::sin ( mSunPos.y ),
-      lightDistance * math<float>::cos ( mSunPos.y ) * math<float>::sin ( mSunPos.x )
-      ));
   
-  mDeferredRenderer.getCubeLightsRef()->at(1)->setPos(
-    Vec3f(
-          lightDistance * math<float>::cos ( mMoonPos.y ) * math<float>::cos ( mMoonPos.x ),
-          //      math<float>::sin(),
-          lightDistance * math<float>::sin ( mMoonPos.y ),
-          lightDistance * math<float>::cos ( mMoonPos.y ) * math<float>::sin ( mMoonPos.x )
-          ));
-//      math<float>::cos(getElapsedSeconds() + (M_PI)) * lightDistance ));
+  // rotate sun
+  Vec3f sunPos(lightDistance, 0, 0);
+  sunPos.rotate(Vec3f(0, 0, 1), mSunPos.alt );
+  sunPos.rotate(Vec3f(0, 1, 0), mSunPos.azm );
+  mDeferredRenderer.getCubeLightsRef()->at(0)->setPos(sunPos);
   
-  /*
-   float lightDistance = 10.0f;
-   mDeferredRenderer.getCubeLightsRef()->at(0)->setPos(
-   Vec3f(
-   math<float>::sin(getElapsedSeconds() + (M_PI)) * lightDistance,
-   5.0f,
-   math<float>::cos(getElapsedSeconds() + (M_PI)) * lightDistance ));
-   */
+  // rotate sun
+  Vec3f moonPos(lightDistance, 0, 0);
+  moonPos.rotate(Vec3f(0, 0, 1), mMoonPos.alt );
+  moonPos.rotate(Vec3f(0, 1, 0), mMoonPos.azm );
+  mDeferredRenderer.getCubeLightsRef()->at(1)->setPos(moonPos);
   
-//  //moving some lights for effect
-//  int counter = 0;
-//  for( vector<Light_Point*>::iterator lightIter = mDeferredRenderer.mCubeLights.begin(); lightIter != mDeferredRenderer.mCubeLights.end(); lightIter++ ) {
-//    (*lightIter)->setPos(
-//                         Vec3f(
-//                               math<float>::sin(getElapsedSeconds() + (M_PI * counter)) * 5.0f,
-//                               5.0f,
-//                               math<float>::cos(getElapsedSeconds() + (M_PI * counter)) * 5.0f ));
-//    counter++;
-//  }
-  
-//  console() << std::time(0) << endl;
 }
 
 void LandscapeApp::draw()
@@ -246,107 +248,6 @@ void LandscapeApp::draw()
 	if (mShowParams) {
 		mParams.draw();
   }
-}
-
-void LandscapeApp::keyDown( KeyEvent event )
-{
-  float lightMovInc = 0.25f;
-    
-	switch ( event.getCode() )
-	{
-            //switch between render views
-		case KeyEvent::KEY_0:
-        {RENDER_MODE = DeferredRenderer::SHOW_FINAL_VIEW;}
-			break;
-		case KeyEvent::KEY_1:
-        {RENDER_MODE = DeferredRenderer::SHOW_DIFFUSE_VIEW;}
-			break;
-		case KeyEvent::KEY_2:
-        {RENDER_MODE = DeferredRenderer::SHOW_NORMALMAP_VIEW;}
-			break;
-		case KeyEvent::KEY_3:
-        {RENDER_MODE = DeferredRenderer::SHOW_DEPTH_VIEW;}
-			break;
-        case KeyEvent::KEY_4:
-        {RENDER_MODE = DeferredRenderer::SHOW_POSITION_VIEW;}
-			break;
-        case KeyEvent::KEY_5:
-        {RENDER_MODE = DeferredRenderer::SHOW_ATTRIBUTE_VIEW;}
-			break;
-        case KeyEvent::KEY_6:
-        {RENDER_MODE = DeferredRenderer::SHOW_SSAO_VIEW;}
-			break;
-        case KeyEvent::KEY_7:
-        {RENDER_MODE = DeferredRenderer::SHOW_SSAO_BLURRED_VIEW;}
-			break;
-        case KeyEvent::KEY_8:
-        {RENDER_MODE = DeferredRenderer::SHOW_LIGHT_VIEW;}
-            break;
-        case KeyEvent::KEY_9:
-        {RENDER_MODE = DeferredRenderer::SHOW_SHADOWS_VIEW;}
-			break;
-            
-            //change which cube you want to control
-        case 269: {
-            //minus key
-            if( mDeferredRenderer.getNumCubeLights() > 0) {
-                --mCurrLightIndex;
-                if ( mCurrLightIndex < 0) mCurrLightIndex = mDeferredRenderer.getNumCubeLights() - 1;
-            }
-        }
-            break;
-        case 61: {
-            if( mDeferredRenderer.getNumCubeLights() > 0) {
-                //plus key
-                ++mCurrLightIndex;
-                if ( mCurrLightIndex > mDeferredRenderer.getNumCubeLights() - 1) mCurrLightIndex = 0;
-            }
-        }
-            break;
-			
-            //move selected cube light
-		case KeyEvent::KEY_UP: {
-            if ( mDeferredRenderer.getNumCubeLights() > 0) {
-                if(event.isShiftDown()) {
-                    mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, lightMovInc, 0.0f ));
-                }
-                else {
-                    mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, 0.0f, lightMovInc));
-                }
-            }
-		}
-			break;
-		case KeyEvent::KEY_DOWN: {
-            if ( mDeferredRenderer.getNumCubeLights() > 0) {
-                if(event.isShiftDown()) {
-                    mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, -lightMovInc, 0.0f ));
-                }
-                else {
-                    mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, 0.0, -lightMovInc));
-                }
-            }
-		}
-			break;
-		case KeyEvent::KEY_LEFT: {
-            if ( mDeferredRenderer.getNumCubeLights() > 0) {
-                mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(lightMovInc, 0.0, 0.0f));
-            }
-		}
-			break;
-		case KeyEvent::KEY_RIGHT: {
-            if ( mDeferredRenderer.getNumCubeLights() > 0) {
-                mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(-lightMovInc, 0.0, 0.0f));
-            }
-		}
-            break;
-        case KeyEvent::KEY_ESCAPE: {
-            //never know when you need to quit quick
-            exit(1);
-        }
-			break;
-		default:
-			break;
-	}
 }
 
 void LandscapeApp::mouseDown( MouseEvent event )
@@ -363,8 +264,6 @@ void LandscapeApp::mouseDrag( MouseEvent event )
     }
 }
 
-
-
 void LandscapeApp::drawShadowCasters(gl::GlslProg* deferShader) const
 {
   gl::pushMatrices();
@@ -375,7 +274,7 @@ void LandscapeApp::drawShadowCasters(gl::GlslProg* deferShader) const
 
 void LandscapeApp::drawNonShadowCasters(gl::GlslProg* deferShader) const
 {
-    int size = 3000;
+    int size = 10;
     //a plane to capture shadows (though it won't cast any itself)
     glColor3ub(255, 255, 255);
     glNormal3f(0.0f, 1.0f, 0.0f);
@@ -407,77 +306,130 @@ void LandscapeApp::drawOverlay() const
   fontTexture_FR.unbind();
 }
 
-void LandscapeApp::initPython() {
+void LandscapeApp::keyDown( KeyEvent event )
+{
+  float lightMovInc = 0.25f;
   
-  fs::path ephemScriptPath = getResourcePath(RES_EPHEM_SCRIPT);
-  
-  PyRun_SimpleString("import imp");
-  PyRun_SimpleString("import ephem");
-  char cmd [200];
-  sprintf (cmd, "ephemScript = imp.load_source('ephemScript', '%s')", ephemScriptPath.c_str());
-  PyRun_SimpleString(cmd);
-  
-  console() << "current positions:" << endl;
-  console() << "sun: " << getSunPosition(std::time(0)) << endl;
-  console() << "moon: " << getMoonPosition(std::time(0)) << endl;
-  
+	switch ( event.getCode() )
+	{
+      //switch between render views
+		case KeyEvent::KEY_0:
+    {RENDER_MODE = DeferredRenderer::SHOW_FINAL_VIEW;}
+			break;
+		case KeyEvent::KEY_1:
+    {RENDER_MODE = DeferredRenderer::SHOW_DIFFUSE_VIEW;}
+			break;
+		case KeyEvent::KEY_2:
+    {RENDER_MODE = DeferredRenderer::SHOW_NORMALMAP_VIEW;}
+			break;
+		case KeyEvent::KEY_3:
+    {RENDER_MODE = DeferredRenderer::SHOW_DEPTH_VIEW;}
+			break;
+    case KeyEvent::KEY_4:
+    {RENDER_MODE = DeferredRenderer::SHOW_POSITION_VIEW;}
+			break;
+    case KeyEvent::KEY_5:
+    {RENDER_MODE = DeferredRenderer::SHOW_ATTRIBUTE_VIEW;}
+			break;
+    case KeyEvent::KEY_6:
+    {RENDER_MODE = DeferredRenderer::SHOW_SSAO_VIEW;}
+			break;
+    case KeyEvent::KEY_7:
+    {RENDER_MODE = DeferredRenderer::SHOW_SSAO_BLURRED_VIEW;}
+			break;
+    case KeyEvent::KEY_8:
+    {RENDER_MODE = DeferredRenderer::SHOW_LIGHT_VIEW;}
+      break;
+    case KeyEvent::KEY_9:
+    {RENDER_MODE = DeferredRenderer::SHOW_SHADOWS_VIEW;}
+			break;
+      
+      //change which cube you want to control
+    case 269: {
+      //minus key
+      if( mDeferredRenderer.getNumCubeLights() > 0) {
+        --mCurrLightIndex;
+        if ( mCurrLightIndex < 0) mCurrLightIndex = mDeferredRenderer.getNumCubeLights() - 1;
+      }
+    }
+      break;
+    case 61: {
+      if( mDeferredRenderer.getNumCubeLights() > 0) {
+        //plus key
+        ++mCurrLightIndex;
+        if ( mCurrLightIndex > mDeferredRenderer.getNumCubeLights() - 1) mCurrLightIndex = 0;
+      }
+    }
+      break;
+			
+      //move selected cube light
+		case KeyEvent::KEY_UP: {
+      if ( mDeferredRenderer.getNumCubeLights() > 0) {
+        if(event.isShiftDown()) {
+          mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, lightMovInc, 0.0f ));
+        }
+        else {
+          mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, 0.0f, lightMovInc));
+        }
+      }
+		}
+			break;
+		case KeyEvent::KEY_DOWN: {
+      if ( mDeferredRenderer.getNumCubeLights() > 0) {
+        if(event.isShiftDown()) {
+          mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, -lightMovInc, 0.0f ));
+        }
+        else {
+          mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, 0.0, -lightMovInc));
+        }
+      }
+		}
+			break;
+		case KeyEvent::KEY_LEFT: {
+      if ( mDeferredRenderer.getNumCubeLights() > 0) {
+        mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(lightMovInc, 0.0, 0.0f));
+      }
+		}
+			break;
+		case KeyEvent::KEY_RIGHT: {
+      if ( mDeferredRenderer.getNumCubeLights() > 0) {
+        mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(-lightMovInc, 0.0, 0.0f));
+      }
+		}
+      break;
+    case KeyEvent::KEY_ESCAPE: {
+      //never know when you need to quit quick
+      exit(1);
+    }
+			break;
+		default:
+			break;
+	}
 }
 
-Vec2<double> LandscapeApp::getSunPosition(long UTCtimestamp) {
-  
-  // this is ridiculously messy, just hacking it to make it work atm x_x
-  char cmd [200];
-  sprintf (cmd, "result = ephemScript.getAzimuth(ephem.Sun(), %s)", to_string(UTCtimestamp).c_str());
-  PyRun_SimpleString(cmd);
-  
-//  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Sun(), ephem.now())");
-  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
-  assert(module);                                     // __main__ should always exist
-  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
-  assert(dictionary);                                 // __main__ should have a dictionary
-  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
-  assert(result);                                     // just added result
-  assert(PyFloat_Check(result));                      // result should be a float
-  float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
-  
-  sprintf (cmd, "result2 = ephemScript.getAltitude(ephem.Sun(), %s)", to_string(UTCtimestamp).c_str());
-  PyRun_SimpleString(cmd);
-  
-//  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Sun(), ephem.now())");
-  PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
-  assert(result2);                                     // just added result
-  assert(PyFloat_Check(result2));                      // result should be a float
-  float altitude = PyFloat_AsDouble(result2);          // already checked that it is an int
-  
-  return Vec2<double>(azimuth, altitude);
-}
-Vec2<double> LandscapeApp::getMoonPosition(long UTCtimestamp) {
-  
-  // this is ridiculously messy, just hacking it to make it work atm x_x
-  char cmd [200];
-  sprintf (cmd, "result = ephemScript.getAzimuth(ephem.Moon(), %s)", to_string(UTCtimestamp).c_str());
-  PyRun_SimpleString(cmd);
-  
-//  PyRun_SimpleString("result = ephemScript.getAzimuth(ephem.Moon(), ephem.now())");
-  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
-  assert(module);                                     // __main__ should always exist
-  PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
-  assert(dictionary);                                 // __main__ should have a dictionary
-  PyObject * result = PyDict_GetItemString(dictionary, "result");     // borrowed reference
-  assert(result);                                     // just added result
-  assert(PyFloat_Check(result));                      // result should be a float
-  float azimuth = PyFloat_AsDouble(result);          // already checked that it is an int
 
-  sprintf (cmd, "result2 = ephemScript.getAltitude(ephem.Moon(), %s)", to_string(UTCtimestamp).c_str());
-  PyRun_SimpleString(cmd);
+AzmAlt LandscapeApp::getSunPosition(double hours) {
   
-//  PyRun_SimpleString("result2 = ephemScript.getAltitude(ephem.Moon(), ephem.now())");
-  PyObject * result2 = PyDict_GetItemString(dictionary, "result2");     // borrowed reference
-  assert(result2);                                     // just added result
-  assert(PyFloat_Check(result2));                      // result should be a float
-  float altitude = PyFloat_AsDouble(result2);          // already checked that it is an int
+  PyObject* getSunAzimuth = PyObject_GetAttrString(py_em, (char*)"getSunAzimuth");
+  PyObject* args = PyTuple_Pack(1, PyFloat_FromDouble(hours));
+  PyObject* az = PyObject_CallObject(getSunAzimuth, args);
+
+  PyObject* getSunAltitude = PyObject_GetAttrString(py_em, (char*)"getSunAltitude");
+  args = PyTuple_Pack(1, PyFloat_FromDouble(hours));
+  PyObject* alt = PyObject_CallObject(getSunAltitude, args);
+
+  return { PyFloat_AsDouble(az), PyFloat_AsDouble(alt)};
+}
+AzmAlt LandscapeApp::getMoonPosition(double hours) {
+  PyObject* getMoonAzimuth = PyObject_GetAttrString(py_em, (char*)"getMoonAzimuth");
+  PyObject* args = PyTuple_Pack(1, PyFloat_FromDouble(hours));
+  PyObject* az = PyObject_CallObject(getMoonAzimuth, args);
   
-  return Vec2<double>(azimuth, altitude);
+  PyObject* getMoonAltitude = PyObject_GetAttrString(py_em, (char*)"getMoonAltitude");
+  args = PyTuple_Pack(1, PyFloat_FromDouble(hours));
+  PyObject* alt = PyObject_CallObject(getMoonAltitude, args);
+  
+  return {PyFloat_AsDouble(az), PyFloat_AsDouble(alt)};
 }
 
 

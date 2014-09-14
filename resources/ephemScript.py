@@ -25,16 +25,19 @@ import math
 
 # http://www.daftlogic.com/sandbox-google-maps-find-altitude.htm
 # PlaceName = (latitude°,longitude°, elevation above sea level in meters)
-Pier9           = (37.7999667,-122.39800439999999, 9.031)
+Pier9           = (37.7999667,  -122.39800439999999, 9.031)
 Emeryville      = (0,37.831316, -122.28524729999998, 24.407)
-TreasureIsland  = (37.8235515, -122.37064800000002, 11.532)
+TreasureIsland  = (37.8235515,  -122.37064800000002, 11.532)
 currentPosition = Pier9
 currPosStr      = "Pier 9, San Francisco"
+
 
 # set position
 position = ephem.Observer()
 position.lat, position.lon, position.elevation = currentPosition
 position.date = ephem.now()
+
+
 
 # convert heading (degrees) into cardinal direction
 def headingToCardinal(heading):
@@ -84,15 +87,49 @@ def printPosition(body):
     (pitchToVernacular(altitude),altitude,\
         ('above' if altitude > 0 else 'below'))    
 
-def getAzimuth(body, timestamp):
-    position.date = timestamp
+def getAzimuth(body, time):
+    position.date = time
     body.compute(position)
     return math.degrees(float(body.az))
 
-def getAltitude(body, timestamp):
-    position.date = timestamp
+def getAltitude(body, time):
+    position.date = time
     body.compute(position)
     return math.degrees(float(body.alt))
+
+
+# SUN
+def getSunAzimuth(time):
+    body = ephem.Sun();
+    position.date = time
+    body.compute(position)
+    return float(body.az)
+def getSunAltitude(time):
+    body = ephem.Sun();
+    position.date = time
+    body.compute(position)
+    return float(body.alt)
+
+# MOON
+def getMoonAzimuth(time):
+    body = ephem.Moon();
+    position.date = time
+    body.compute(position)
+    return float(body.az)
+def getMoonAltitude(time):
+    body = ephem.Moon();
+    position.date = time
+    body.compute(position)
+    return float(body.alt)    
+
+
+def getNowHours():
+    return ephem.Date(ephem.localtime(ephem.now())) + 0
+
+
+
+# def getEphemTimeBeginHours():
+#   return ephem.Date("1899/12/31 12:00:00") + 0
 
 # if __name__ == '__main__':
 #     print "UTC " + str(ephem.now())
