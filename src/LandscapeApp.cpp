@@ -87,6 +87,7 @@ class LandscapeApp : public AppBasic
 //    string getNowString();
   
     // colors
+    float mAmbientBrightness;
     ColorA mSunColor;
     ColorA mMoonColor;
   
@@ -119,6 +120,7 @@ void LandscapeApp::setup()
   mCurrLightIndex = 0;
   mSunColor  = Color(1.0f, 1.0f, 0.9f);
   mMoonColor = Color(0.24f, 0.15f, 0.94f);
+  mAmbientBrightness = 100.0f;
 
   // load object and put it into a VBO
   ObjLoader loader( (DataSourceRef)loadResource( RES_LANDSCAPE_OBJ ) );
@@ -146,14 +148,16 @@ void LandscapeApp::setup()
 	mParams.addParam( "Framerate", &mCurrFramerate, "", true );
 
   mParams.addSeparator();
-  
-  mParams.addParam( "Sun Color", &mSunColor );
+
   mParams.addParam( "Sun Azimuth", &mSunPos.azm ).precision( 2 ).step( 0.02f );
   mParams.addParam( "Sun Altitude", &mSunPos.alt ).precision( 2 ).step( 0.02f );
+  mParams.addParam( "Sun Color", &mSunColor );
   
-  mParams.addParam( "Moon Color", &mMoonColor );
   mParams.addParam( "Moon Azimuth", &mMoonPos.azm ).precision( 2 ).step( 0.02f );
   mParams.addParam( "Moon Altitude", &mMoonPos.alt ).precision( 2 ).step( 0.02f );
+  mParams.addParam( "Moon Color", &mMoonColor );
+
+  mParams.addParam( "Ambient Brightness", &mAmbientBrightness);
   
 
 
@@ -176,11 +180,11 @@ void LandscapeApp::setup()
   
   // add point lights
   mDeferredRenderer.addPointLight( Vec3f(0,0,0),
-                                   mSunColor * LIGHT_BRIGHTNESS_DEFAULT * 0.8,
+                                   mSunColor * mAmbientBrightness * 0.8,
                                    true,
                                    true);
   mDeferredRenderer.addPointLight( Vec3f(0,0,0),
-                                   mMoonColor * LIGHT_BRIGHTNESS_DEFAULT * 0.8,
+                                   mMoonColor * mAmbientBrightness * 0.8,
                                    true,
                                    true);
   
@@ -237,12 +241,16 @@ void LandscapeApp::update()
   sunPos.rotate(Vec3f(0, 0, 1), mSunPos.alt );
   sunPos.rotate(Vec3f(0, 1, 0), mSunPos.azm );
   mDeferredRenderer.getCubeLightsRef()->at(0)->setPos(sunPos);
+  mDeferredRenderer.getCubeLightsRef()->at(0)->setCol(mSunColor
+                                              * mAmbientBrightness * 0.8);
   
   // rotate sun
   Vec3f moonPos(lightDistance, 0, 0);
   moonPos.rotate(Vec3f(0, 0, 1), mMoonPos.alt );
   moonPos.rotate(Vec3f(0, 1, 0), mMoonPos.azm );
   mDeferredRenderer.getCubeLightsRef()->at(1)->setPos(moonPos);
+  mDeferredRenderer.getCubeLightsRef()->at(1)->setCol(mMoonColor
+                                              * mAmbientBrightness * 0.8);
   
 }
 
