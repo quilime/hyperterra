@@ -28,7 +28,7 @@ using namespace std;
 
 static const float	APP_RES_HORIZONTAL = 1024.0f;
 static const float	APP_RES_VERTICAL = 768.0f;
-static const Vec3f	CAM_POSITION_INIT( -14.0f, 7.0f, -14.0f );
+static const Vec3f	CAM_POSITION_INIT( -24.0f, 7.0f, -24.0f );
 static const Vec3f	LIGHT_POSITION_INIT( 3.0f, 1.5f, 0.0f );
 
 struct AzmAlt {
@@ -44,92 +44,87 @@ class LandscapeApp : public AppBasic
     void update();
     void draw();
     void shutdown();
-  
     void keyDown( app::KeyEvent event );
     void mouseDown( MouseEvent event );
     void mouseDrag( MouseEvent event );
-    
+  
+  private:
+  
+    // renderer
     void drawShadowCasters(gl::GlslProg* deferShader) const;
     void drawNonShadowCasters(gl::GlslProg* deferShader) const;
     void drawOverlay() const;
   
-  
-  protected:
     //debug
     cinder::params::InterfaceGl mParams;
     int RENDER_MODE;
     bool mShowParams;
     float	mCurrFramerate;
-	
+    
     //camera
     MayaCamUI mMayaCam;
     CameraPersp mCam;
-  
+    
     // renderer
     DeferredRenderer mDeferredRenderer;
     int mCurrLightIndex;
-  
+    
     // object loading
     TriMesh mMesh;
     gl::VboMesh mVBO;
-  
+    
     // light positions
-    AzmAlt getSunPosition(double hours);
-    AzmAlt getMoonPosition(double hours);
-  
+    AzmAlt getSunPosition(double day);
+    AzmAlt getMoonPosition(double day);
+    
     // python
     PyObject* py_ephem;
     PyObject* py_em;
   
-  
-  
     // time
-    double mTimeHours;
-    double getNowHours();
-
+    double mTimeDay;
+    double getNowDay();
+//    string getNowString();
+  
+    // colors
+    ColorA mSunColor;
+    ColorA mMoonColor;
+  
+    // positions
     AzmAlt mSunPos;
     AzmAlt mMoonPos;
   
-    int count;
 };
 
 
 
 void LandscapeApp::prepareSettings( Settings *settings )
 {
-	settings->setWindowSize( APP_RES_HORIZONTAL, APP_RES_VERTICAL );
-  settings->setBorderless( false );
-	settings->setFrameRate( 1000.0f );			//the more the merrier!
-	settings->setResizable( false );			//this isn't going to be resizable
-  settings->setFullScreen( false );
-    
-	//make sure secondary screen isn't blacked out as well when in fullscreen mode ( do wish it could accept keyboard focus though :(
-	//settings->enableSecondaryDisplayBlanking( false );
+	settings->setWindowSize ( APP_RES_HORIZONTAL, APP_RES_VERTICAL );
+  settings->setBorderless ( false );
+	settings->setFrameRate  ( 1000.0f ); // max it out
+	settings->setResizable  ( false ); // non-resizable because of the shadowmaps
+  settings->setFullScreen ( false );
+	// make sure secondary screen isn't blacked out as well when in fullscreen
+	// settings->enableSecondaryDisplayBlanking( false );
 }
 
 void LandscapeApp::setup()
 {
-    //!!test texture for diffuse texture
+	gl::disableVerticalSync(); // for faster framerate
   
-	gl::disableVerticalSync(); //so I can get a true representation of FPS (if higher than 60 anyhow :/)
-    
+  // variable inits
 	RENDER_MODE = DeferredRenderer::SHOW_FINAL_VIEW;
-    
-	mParams = params::InterfaceGl( "3D_Scene_Base", Vec2i( 225, 125 ) );
-	mParams.addParam( "Framerate", &mCurrFramerate, "", true );
-    mParams.addParam( "Selected Light Index", &mCurrLightIndex);
-	mParams.addParam( "Show/Hide Params", &mShowParams, "key=x");
-	mParams.addSeparator();
-  
-  // load object
+  mCurrFramerate  = 0.0f;
+  mCurrLightIndex = 0;
+  mSunColor  = Color(1.0f, 1.0f, 0.9f);
+  mMoonColor = Color(0.24f, 0.15f, 0.94f);
+
+  // load object and put it into a VBO
   ObjLoader loader( (DataSourceRef)loadResource( RES_LANDSCAPE_OBJ ) );
   loader.load( &mMesh );
   mVBO = gl::VboMesh( mMesh );
   
-    
-	mCurrFramerate = 0.0f;
-	mShowParams = true;
-	
 	//set up camera
 	mCam.setPerspective( 45.0f, getWindowAspectRatio(), 0.1f, 10000.0f );
   mCam.lookAt(CAM_POSITION_INIT * 1.5f, Vec3f::zero(), Vec3f(0.0f, 1.0f, 0.0f) );
@@ -137,75 +132,80 @@ void LandscapeApp::setup()
   mMayaCam.setCurrentCam(mCam);
   
   //create functions pointers to send to deferred renderer
-  boost::function<void(gl::GlslProg*)> fRenderShadowCastersFunc = boost::bind( &LandscapeApp::drawShadowCasters, this, boost::lambda::_1 );
-  boost::function<void(gl::GlslProg*)> fRenderNotShadowCastersFunc = boost::bind( &LandscapeApp::drawNonShadowCasters, this,  boost::lambda::_1 );
-  boost::function<void(void)> fRenderOverlayFunc = boost::bind( &LandscapeApp::drawOverlay, this );
+  boost::function<void(gl::GlslProg*)> fRenderShadowCastersFunc =
+    boost::bind( &LandscapeApp::drawShadowCasters, this, boost::lambda::_1 );
+  boost::function<void(gl::GlslProg*)> fRenderNotShadowCastersFunc =
+    boost::bind( &LandscapeApp::drawNonShadowCasters, this,  boost::lambda::_1 );
+  boost::function<void(void)> fRenderOverlayFunc =
+    boost::bind( &LandscapeApp::drawOverlay, this );
   
-  //NULL value represents the opportunity to a function pointer to an "overlay" method. Basically only basic textures can be used and it is overlayed onto the final scene.
-  //see example of such a function (from another project) commented out at the bottom of this class ...
-  
-  mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, NULL, NULL, &mCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true, true ); //no overlay or "particles"
-//  mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, fRenderOverlayFunc, NULL, &mCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true ); //overlay enabled
-  //mDeferredRenderer.setup( fRenderShadowCastersFunc, fRenderNotShadowCastersFunc, fRenderOverlayFunc, fRenderParticlesFunc, &mMayaCam, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024, true, true ); //overlay and "particles" enabled -- not working yet
-  
-  //have these cast point light shadows
-  
-  Color sun = Color(1.0f, 1.0f, 0.9f);
-  mDeferredRenderer.addPointLight( Vec3f(0,0,0), sun * LIGHT_BRIGHTNESS_DEFAULT * 2.0, true);
-  
-  Color moon = Color(0.24f, 0.15f, 0.94f);
-  mDeferredRenderer.addPointLight( Vec3f(0,0,0), moon * LIGHT_BRIGHTNESS_DEFAULT * 0.2, true);
-  
-  mCurrLightIndex = 0;
-  
-//  mCurTime = std::time(0);
-  count = 0;
 
-  // object loading
-  TriMesh       mMesh;
-  gl::VboMesh   mVBO;
+  // tweakbar params
+	mParams = params::InterfaceGl( "Landscape", Vec2i( 225, 125 ) );
+	mParams.addParam( "Show/Hide Params", &mShowParams, "key=x");
+	mParams.addParam( "Framerate", &mCurrFramerate, "", true );
+
+  mParams.addSeparator();
   
-  // time
-//  mChronoTimePoint = chrono::high_resolution_clock::now();
-//  console() << chrono::duration_cast<chrono::seconds>(mChronoTimePoint.time_since_epoch()).count() << endl;
+  mParams.addParam( "Sun Color", &mSunColor );
+  mParams.addParam( "Sun Azimuth", &mSunPos.azm ).precision( 2 ).step( 0.02f );
+  mParams.addParam( "Sun Altitude", &mSunPos.alt ).precision( 2 ).step( 0.02f );
   
-//  std::chrono::time_point<std::chrono::system_clock> p1, now, p3;
-//  
-//  now = std::chrono::system_clock::now();
-//  
-//  std::time_t epoch_time = std::chrono::system_clock::to_time_t(p1);
-//  std::cout << "epoch: " << std::ctime(&epoch_time);
-//  
-//  std::time_t today_time = std::chrono::system_clock::to_time_t(now);
-//  std::cout << "today: " << std::ctime(&today_time);
-//  
-//  mTimeHours  = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-//  mTimeHours /= 60; // seconds
-//  mTimeHours /= 60; // hours
-//  
-//  std::cout << "hours since epoch: " << mTimeHours << '\n';
- 
+  mParams.addParam( "Moon Color", &mMoonColor );
+  mParams.addParam( "Moon Azimuth", &mMoonPos.azm ).precision( 2 ).step( 0.02f );
+  mParams.addParam( "Moon Altitude", &mMoonPos.alt ).precision( 2 ).step( 0.02f );
+
+	
+	mShowParams = true;
   
-  // start python
+  
+  // setup deferred renderer
+  mDeferredRenderer.setup(
+                          fRenderShadowCastersFunc,
+                          fRenderNotShadowCastersFunc,
+                          NULL, //fRenderOverlayFunc,
+                          NULL,
+                          &mCam,
+                          Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL),
+                          1024,
+                          true,
+                          true
+                          );
+  
+  // add point lights
+  mDeferredRenderer.addPointLight( Vec3f(0,0,0),
+                                   mSunColor * LIGHT_BRIGHTNESS_DEFAULT * 0.8,
+                                   true,
+                                   false);
+  mDeferredRenderer.addPointLight( Vec3f(0,0,0),
+                                   mMoonColor * LIGHT_BRIGHTNESS_DEFAULT * 0.8,
+                                   true,
+                                   false);
+  
+  
+  // init python
   Py_Initialize();
-  // import our script
+  // import ephemScript from /Library/Python/2.7/site-specific/
   py_ephem = PyImport_Import(PyString_FromString((char*)"ephem"));
   py_em = PyImport_Import(PyString_FromString((char*)"ephemScript"));
   
-  mTimeHours = getNowHours();
+  mTimeDay = getNowDay();
   
-  console() << "mTimeHours: " << mTimeHours << endl;
+  console() << "mTimeDay: " << mTimeDay << endl;
   
 //  console() << "getSunPos: " << getSunPosition(mTimeHours) << endl;
 }
 
 
-double LandscapeApp::getNowHours() {
-  PyObject* getNowHours = PyObject_GetAttrString(py_em,(char*)"getNowHours");
-  PyObject* args = NULL;
-  PyObject* myResult = PyObject_CallObject(getNowHours, args);
-  return PyFloat_AsDouble(myResult);
+double LandscapeApp::getNowDay() {
+  PyObject* getNowDay = PyObject_GetAttrString(py_em,(char*)"getNowDay");
+  return PyFloat_AsDouble(PyObject_CallObject(getNowDay, NULL));
 }
+
+//string LandscapeApp::getNowString() {
+//  PyObject* getNowString = PyObject_GetAttrString(py_em,(char*)"getNowString");
+//  return PyObject_CallObject((char *)getNowString, NULL);
+//}
 
 
 void LandscapeApp::shutdown()
@@ -222,10 +222,12 @@ void LandscapeApp::update()
   mDeferredRenderer.mCam = &mCam;
 	mCurrFramerate = getAverageFps();
 
-  mTimeHours -= 1.0 / 24.0 / 60.0;
-  mSunPos  = getSunPosition(mTimeHours);
-  mMoonPos = getMoonPosition(mTimeHours);
-
+  mTimeDay += 1.0 / 24.0 / 60.0;
+  if (false) {
+    mSunPos  = getSunPosition(mTimeDay);
+    mMoonPos = getMoonPosition(mTimeDay);
+  }
+  
   float lightDistance = 14.0f;
   
   // rotate sun
@@ -288,6 +290,7 @@ void LandscapeApp::drawNonShadowCasters(gl::GlslProg* deferShader) const
 
 void LandscapeApp::drawOverlay() const
 {
+  /*
   Vec3f camUp, camRight;
   mCam.getBillboardVectors(&camRight, &camUp);
   
@@ -304,12 +307,11 @@ void LandscapeApp::drawOverlay() const
   fontTexture_FR.bind();
   gl::drawBillboard(Vec3f(-3.0f, 7.0f, 0.0f), Vec2f(fontTexture_FR.getWidth()/20.0f , fontTexture_FR.getHeight()/20.0f), 0, camRight, camUp);
   fontTexture_FR.unbind();
+  */
 }
 
 void LandscapeApp::keyDown( KeyEvent event )
 {
-  float lightMovInc = 0.25f;
-  
 	switch ( event.getCode() )
 	{
       //switch between render views
@@ -344,7 +346,7 @@ void LandscapeApp::keyDown( KeyEvent event )
     {RENDER_MODE = DeferredRenderer::SHOW_SHADOWS_VIEW;}
 			break;
       
-      //change which cube you want to control
+    // change which cube you want to control
     case 269: {
       //minus key
       if( mDeferredRenderer.getNumCubeLights() > 0) {
@@ -362,77 +364,38 @@ void LandscapeApp::keyDown( KeyEvent event )
     }
       break;
 			
-      //move selected cube light
-		case KeyEvent::KEY_UP: {
-      if ( mDeferredRenderer.getNumCubeLights() > 0) {
-        if(event.isShiftDown()) {
-          mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, lightMovInc, 0.0f ));
-        }
-        else {
-          mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, 0.0f, lightMovInc));
-        }
-      }
-		}
-			break;
-		case KeyEvent::KEY_DOWN: {
-      if ( mDeferredRenderer.getNumCubeLights() > 0) {
-        if(event.isShiftDown()) {
-          mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, -lightMovInc, 0.0f ));
-        }
-        else {
-          mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(0.0f, 0.0, -lightMovInc));
-        }
-      }
-		}
-			break;
-		case KeyEvent::KEY_LEFT: {
-      if ( mDeferredRenderer.getNumCubeLights() > 0) {
-        mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(lightMovInc, 0.0, 0.0f));
-      }
-		}
-			break;
-		case KeyEvent::KEY_RIGHT: {
-      if ( mDeferredRenderer.getNumCubeLights() > 0) {
-        mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->setPos( mDeferredRenderer.getCubeLightsRef()->at(mCurrLightIndex)->getPos() + Vec3f(-lightMovInc, 0.0, 0.0f));
-      }
-		}
-      break;
-    case KeyEvent::KEY_ESCAPE: {
-      //never know when you need to quit quick
-      exit(1);
-    }
-			break;
-		default:
-			break;
+		case KeyEvent::KEY_UP:     { } break;
+		case KeyEvent::KEY_DOWN:   { } break;
+		case KeyEvent::KEY_LEFT:   { } break;
+		case KeyEvent::KEY_RIGHT:  { } break;
+    case KeyEvent::KEY_ESCAPE: { exit(1); } break;
+		default : break;
 	}
 }
 
 
-AzmAlt LandscapeApp::getSunPosition(double hours) {
-  
+AzmAlt LandscapeApp::getSunPosition(double day) {
+  // get azimuth
   PyObject* getSunAzimuth = PyObject_GetAttrString(py_em, (char*)"getSunAzimuth");
-  PyObject* args = PyTuple_Pack(1, PyFloat_FromDouble(hours));
+  PyObject* args = PyTuple_Pack(1, PyFloat_FromDouble(day));
   PyObject* az = PyObject_CallObject(getSunAzimuth, args);
-
+  // get altitude
   PyObject* getSunAltitude = PyObject_GetAttrString(py_em, (char*)"getSunAltitude");
-  args = PyTuple_Pack(1, PyFloat_FromDouble(hours));
+  args = PyTuple_Pack(1, PyFloat_FromDouble(day));
   PyObject* alt = PyObject_CallObject(getSunAltitude, args);
-
   return { PyFloat_AsDouble(az), PyFloat_AsDouble(alt)};
 }
-AzmAlt LandscapeApp::getMoonPosition(double hours) {
+AzmAlt LandscapeApp::getMoonPosition(double day) {
+  // get azimuth
   PyObject* getMoonAzimuth = PyObject_GetAttrString(py_em, (char*)"getMoonAzimuth");
-  PyObject* args = PyTuple_Pack(1, PyFloat_FromDouble(hours));
+  PyObject* args = PyTuple_Pack(1, PyFloat_FromDouble(day));
   PyObject* az = PyObject_CallObject(getMoonAzimuth, args);
-  
+  // get altitude
   PyObject* getMoonAltitude = PyObject_GetAttrString(py_em, (char*)"getMoonAltitude");
-  args = PyTuple_Pack(1, PyFloat_FromDouble(hours));
+  args = PyTuple_Pack(1, PyFloat_FromDouble(day));
   PyObject* alt = PyObject_CallObject(getMoonAltitude, args);
-  
   return {PyFloat_AsDouble(az), PyFloat_AsDouble(alt)};
 }
-
-
 
 
 CINDER_APP_BASIC( LandscapeApp, RendererGl )

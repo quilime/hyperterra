@@ -25,9 +25,9 @@ import math
 
 # http://www.daftlogic.com/sandbox-google-maps-find-altitude.htm
 # PlaceName = (latitude°,longitude°, elevation above sea level in meters)
-Pier9           = (37.7999667,  -122.39800439999999, 9.031)
-Emeryville      = (0,37.831316, -122.28524729999998, 24.407)
-TreasureIsland  = (37.8235515,  -122.37064800000002, 11.532)
+Pier9           = ( 37.7999667, -122.39800439999999, 9.031  )
+Emeryville      = ( 37.831316,  -122.28524729999998, 24.407 )
+TreasureIsland  = ( 37.8235515, -122.37064800000002, 11.532 )
 currentPosition = Pier9
 currPosStr      = "Pier 9, San Francisco"
 
@@ -123,13 +123,12 @@ def getMoonAltitude(time):
     return float(body.alt)    
 
 
-def getNowHours():
+def getNowDay():
     return ephem.Date(ephem.localtime(ephem.now())) + 0
 
+def getNowString():
+    return ephem.Date(ephem.localtime(ephem.now()))
 
-
-# def getEphemTimeBeginHours():
-#   return ephem.Date("1899/12/31 12:00:00") + 0
 
 # if __name__ == '__main__':
 #     print "UTC " + str(ephem.now())
@@ -143,7 +142,6 @@ def getNowHours():
 #     print "\nmoon:"
 #     printPosition(ephem.Sun())
 #     #printCurrentSolarPosition()
-
 
 
 
