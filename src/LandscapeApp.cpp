@@ -154,6 +154,8 @@ void LandscapeApp::setup()
   mParams.addParam( "Moon Color", &mMoonColor );
   mParams.addParam( "Moon Azimuth", &mMoonPos.azm ).precision( 2 ).step( 0.02f );
   mParams.addParam( "Moon Altitude", &mMoonPos.alt ).precision( 2 ).step( 0.02f );
+  
+
 
 	
 	mShowParams = true;
@@ -176,11 +178,11 @@ void LandscapeApp::setup()
   mDeferredRenderer.addPointLight( Vec3f(0,0,0),
                                    mSunColor * LIGHT_BRIGHTNESS_DEFAULT * 0.8,
                                    true,
-                                   false);
+                                   true);
   mDeferredRenderer.addPointLight( Vec3f(0,0,0),
                                    mMoonColor * LIGHT_BRIGHTNESS_DEFAULT * 0.8,
                                    true,
-                                   false);
+                                   true);
   
   
   // init python
