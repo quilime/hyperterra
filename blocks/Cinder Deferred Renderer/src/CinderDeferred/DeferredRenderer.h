@@ -35,6 +35,8 @@
 
 #include "CubeShadowMap.h"
 
+typedef bool BOOL;
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
