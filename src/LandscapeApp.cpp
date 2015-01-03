@@ -112,6 +112,7 @@ void LandscapeApp::prepareSettings( Settings *settings )
 
 void LandscapeApp::setup()
 {
+
 	gl::disableVerticalSync(); // for faster framerate
   
   // variable inits
@@ -140,30 +141,6 @@ void LandscapeApp::setup()
     boost::bind( &LandscapeApp::drawNonShadowCasters, this,  boost::lambda::_1 );
   boost::function<void(void)> fRenderOverlayFunc =
     boost::bind( &LandscapeApp::drawOverlay, this );
-  
-
-  // tweakbar params
-	mParams = params::InterfaceGl( "Landscape", Vec2i( 225, 125 ) );
-	mParams.addParam( "Show/Hide Params", &mShowParams, "key=x");
-	mParams.addParam( "Framerate", &mCurrFramerate, "", true );
-
-  mParams.addSeparator();
-
-  mParams.addParam( "Sun Azimuth", &mSunPos.azm ).precision( 2 ).step( 0.02f );
-  mParams.addParam( "Sun Altitude", &mSunPos.alt ).precision( 2 ).step( 0.02f );
-  mParams.addParam( "Sun Color", &mSunColor );
-  
-  mParams.addParam( "Moon Azimuth", &mMoonPos.azm ).precision( 2 ).step( 0.02f );
-  mParams.addParam( "Moon Altitude", &mMoonPos.alt ).precision( 2 ).step( 0.02f );
-  mParams.addParam( "Moon Color", &mMoonColor );
-
-  mParams.addParam( "Ambient Brightness", &mAmbientBrightness);
-  
-
-
-	
-	mShowParams = true;
-  
   
   // setup deferred renderer
   mDeferredRenderer.setup(
@@ -257,9 +234,6 @@ void LandscapeApp::update()
 void LandscapeApp::draw()
 {
   mDeferredRenderer.renderFullScreenQuad(RENDER_MODE);
-	if (mShowParams) {
-		mParams.draw();
-  }
 }
 
 void LandscapeApp::mouseDown( MouseEvent event )
