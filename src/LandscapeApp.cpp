@@ -296,8 +296,20 @@ void LandscapeApp::drawOverlay() const
 
 void LandscapeApp::keyDown( KeyEvent event )
 {
+  console() << event.getCode() << endl;
+
 	switch ( event.getCode() )
 	{
+
+    case 102 : {
+        // if ( !isFullscreen() ) {
+        //   setFullScreen( true );
+        // } else {
+        //   setFullScreen( false );
+        // }
+      }
+      break;
+
       //switch between render views
 		case KeyEvent::KEY_0:
     {RENDER_MODE = DeferredRenderer::SHOW_FINAL_VIEW;}
