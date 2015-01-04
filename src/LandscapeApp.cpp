@@ -124,7 +124,7 @@ void LandscapeApp::setup()
   mAmbientBrightness = 100.0f;
 
   // load object and put it into a VBO
-  ObjLoader loader( (DataSourceRef)loadResource( RES_LANDSCAPE_OBJ ) );
+  ObjLoader loader( (DataSourceRef)loadAsset( RES_LANDSCAPE_OBJ ) );
   loader.load( &mMesh );
   mVBO = gl::VboMesh( mMesh );
   
@@ -181,7 +181,7 @@ void LandscapeApp::setup()
 
 
 double LandscapeApp::getNowDay() {
-  PyObject* getNowDay = PyObject_GetAttrString(py_em,(char*)"getNowDay");
+  PyObject* getNowDay = PyObject_GetAttrString(py_em, (char*)"getNowDay");
   return PyFloat_AsDouble(PyObject_CallObject(getNowDay, NULL));
 }
 
