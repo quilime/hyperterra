@@ -1,0 +1,3 @@
+[submodule "deps/Cinder"]
+	path = deps/Cinder
+	url = https://github.com/quilime/Cinder.git
