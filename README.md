@@ -2,9 +2,9 @@
 
 ## Software Abstract
 
-OpenGL Projection Graphics Software for the "Hyper Terra" series of projection sculptures by [@quilime](https://github.com/quilime) (Gabriel Dunne)
+OpenGL Projection graphics software coded in C++ using a linux dev branch of the [Cinder](http://libcinder.org/) framework. Created for "Hyper Terra", a series of projection sculptures by [@quilime](https://github.com/quilime) (Gabriel Dunne)
 
-The graphics elements depic an abstract landscape that can exist in any time or place on Earth. Lights are position at the Sun and Moon positions of that time and place, calculated by an [ephemeris](http://en.wikipedia.org/wiki/Ephemeris) table.
+3D graphics depic an abstract landscape that can exist in any time and lat/long on Earth. Lights are position at the Sun and Moon positions of that time and place, calculated by an [ephemeris](http://en.wikipedia.org/wiki/Ephemeris) table, via pyephem, a library for Python.
 
 ## Screenshots
 
