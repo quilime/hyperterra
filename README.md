@@ -12,10 +12,12 @@ The graphics elements depic an abstract landscape that can exist in any time or 
 
 # Hardware
 
-    - Nvidia Jetson TK1 
-    - Ubuntu 14.04 OS
+- Nvidia Jetson TK1 
+- Ubuntu 14.04 OS
 
 # Software
+
+## Ubuntu 14.04 / Arm
 
 Add unrestricted software available from Universe
 
