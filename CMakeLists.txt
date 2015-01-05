@@ -75,6 +75,13 @@ endif( CMAKE_COMPILER_IS_GNUCXX )
 ### =====================================================================================================
 ### INCLUDE DIRS 
 ### =====================================================================================================
+
+file(GLOB OSC_HEADERS
+    "blocks/OSC/src/"
+    "blocks/OSC/src/ip/"
+    "blocks/OSC/src/osc/"
+)
+
 include_directories( 
   ${CMAKE_CURRENT_SOURCE_DIR} 
   ${CMAKE_CURRENT_SOURCE_DIR}/include 
@@ -82,13 +89,24 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/blocks/Cinder\ Deferred\ Renderer/src/CinderDeferred 
   ${CMAKE_CURRENT_SOURCE_DIR}/blocks/OSC/src 
   ${PYTHON_INCLUDE_DIR}
+  ${OSC_HEADERS}
 )
+
 
 
 ### =====================================================================================================
 ### SOURCE FILES 
 ### =====================================================================================================
 list (APPEND source_files src/LandscapeApp.cpp)
+
+### include OSC source files
+file(GLOB OSC_SRC
+    "blocks/OSC/src/*.cpp"
+    "blocks/OSC/src/ip/*.cpp"    
+    "blocks/OSC/src/osc/*.cpp"
+    "blocks/OSC/src/ip/posix/*.cpp"
+)
+list (APPEND source_files ${OSC_SRC})
 
 
 
