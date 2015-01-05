@@ -149,7 +149,7 @@ void LandscapeApp::prepareSettings( Settings *settings )
   settings->setBorderless ( false );
 	settings->setFrameRate  ( 1000.0f ); // max it out
 	settings->setResizable  ( false ); // non-resizable because of the shadowmaps
-  settings->setFullScreen ( true );
+  settings->setFullScreen ( false );
 	// make sure secondary screen isn't blacked out as well when in fullscreen
 //	settings->enableSecondaryDisplayBlanking( false );
 //  settings->en
@@ -525,9 +525,9 @@ void LandscapeApp::loadSettings(){
                    json.getValueForKey<float>("base3z"));
   
   // load object from assets folder
-  // ObjLoader loader( (DataSourceRef) loadAsset("tweaked.obj") );
-  // loader.load( &mMesh );
-  // mVBO = gl::VboMesh::create( mMesh, mLayout );
+  ObjLoader loader( (DataSourceRef) loadAsset("tweaked.obj") );
+  loader.load( &mMesh );
+  mVBO = gl::VboMesh::create( mMesh, mLayout );
 }
 
 
@@ -557,18 +557,77 @@ void LandscapeApp::saveSettings() {
   json.addChild(JsonTree("base3y", baseVerts[3].y));
   json.addChild(JsonTree("base3z", baseVerts[3].z));
   
-  std::ofstream oStream( "assets/settings.json" );
-  oStream << json.serialize();
-  oStream.close();
+  std::ofstream jsonOutStream( "assets/settings.json" );
+  jsonOutStream << json.serialize();
+  jsonOutStream.close();
+
   
-  // // write object out to assets folder
-  // // console() << getAssetPath("") / "tweaked.obj" << endl;
+  // write object out to assets folder
+  // console() << getAssetPath("") / "tweaked.obj" << endl;
+  // Cinder way is broken on Linux, DataAssetRef was acting up
   // ObjLoader::write(writeFile( "assets/tweaked.obj"), mMesh);
 
-  // DataTargetPathRef outpath = writeFile( "settings/tweaked.obj" );
-  // if( ! outpath ) {
-  //   console() << "can't write" << endl;
-  // }
+  // open stream
+  console() << "saving obj" << endl;
+  bool writeNormals = true;
+  bool includeUVs = true;
+  std::ofstream meshOutStream( "assets/tweaked.obj" );
+  const size_t numVerts = mMesh.getNumVertices();
+  for( size_t p = 0; p < numVerts; ++p ) {
+    ostringstream os;
+    os << "v " << mMesh.getVertices()[p].x << " " << mMesh.getVertices()[p].y << " " << mMesh.getVertices()[p].z << std::endl;
+    meshOutStream << os.str().c_str();
+  }
+
+  const bool processTexCoords = mMesh.hasTexCoords() && includeUVs;
+  if( processTexCoords ) {
+    for( size_t p = 0; p < numVerts; ++p ) {
+      ostringstream os;
+      os << "vt " << mMesh.getTexCoords()[p].x << " " << mMesh.getTexCoords()[p].y << std::endl;
+      meshOutStream << os.str().c_str();
+    }
+  }
+  
+  const bool processNormals = mMesh.hasNormals() && writeNormals;
+  if( processNormals ) {
+    for( size_t p = 0; p < numVerts; ++p ) {
+      ostringstream os;
+      os << "vn " << mMesh.getNormals()[p].x << " " << mMesh.getNormals()[p].y << " " << mMesh.getNormals()[p].z << std::endl;
+      meshOutStream << os.str().c_str();
+    }
+  }
+  
+  const size_t numTriangles = mMesh.getNumTriangles();
+  const std::vector<uint32_t>& indices( mMesh.getIndices() );
+  for( size_t t = 0; t < numTriangles; ++t ) {
+    ostringstream os;
+    os << "f ";
+    if( processNormals && processTexCoords ) {
+      os << indices[t*3+0]+1 << "/" << indices[t*3+0]+1 << "/" << indices[t*3+0]+1 << " ";
+      os << indices[t*3+1]+1 << "/" << indices[t*3+1]+1 << "/" << indices[t*3+1]+1 << " ";
+      os << indices[t*3+2]+1 << "/" << indices[t*3+2]+1 << "/" << indices[t*3+2]+1 << " ";
+    }
+    else if ( processNormals ) {
+      os << indices[t*3+0]+1 << "//" << indices[t*3+0]+1 << " ";
+      os << indices[t*3+1]+1 << "//" << indices[t*3+1]+1 << " ";
+      os << indices[t*3+2]+1 << "//" << indices[t*3+2]+1 << " ";
+    }
+    else if( processTexCoords ) {
+      os << indices[t*3+0]+1 << "/" << indices[t*3+0]+1 << " ";
+      os << indices[t*3+1]+1 << "/" << indices[t*3+1]+1 << " ";
+      os << indices[t*3+2]+1 << "/" << indices[t*3+2]+1 << " ";
+    }
+    else { // just verts
+      os << indices[t*3+0]+1 << " ";
+      os << indices[t*3+1]+1 << " ";
+      os << indices[t*3+2]+1 << " ";      
+    }
+    os << std::endl;
+    meshOutStream << os.str().c_str();
+  }  
+
+  // close stream
+  meshOutStream.close();
 }
 
 

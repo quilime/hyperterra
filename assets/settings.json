@@ -11,11 +11,11 @@
    "base3x" : 10.0,
    "base3y" : 0.0,
    "base3z" : 10.0,
-   "camera_eye_point_x" : -15.34227466583252,
-   "camera_eye_point_y" : 9.249071121215820,
-   "camera_eye_point_z" : 6.407449245452881,
+   "camera_eye_point_x" : -12.84149551391602,
+   "camera_eye_point_y" : 7.096322059631348,
+   "camera_eye_point_z" : -19.86183166503906,
    "camera_fov" : 45.0,
-   "camera_viewdir_x" : 0.8018625378608704,
-   "camera_viewdir_y" : -0.4328179359436035,
-   "camera_viewdir_z" : -0.4119285345077515
+   "camera_viewdir_x" : 0.4108936786651611,
+   "camera_viewdir_y" : -0.2256558835506439,
+   "camera_viewdir_z" : 0.8833152055740356
 }
