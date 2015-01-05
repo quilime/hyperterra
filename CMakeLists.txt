@@ -4,11 +4,12 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 find_package(PythonLibs REQUIRED)
 
-
 ### =====================================================================================================
 ### Entry point. Check to see if the environment is set. 
 ### The path to cinder's root dir is a prerequisite.
 ### =====================================================================================================
+set(ENV{CINDER_ROOT} "deps/Cinder")
+
 set (CINDER_ROOT $ENV{CINDER_ROOT})
 if ( "${CINDER_ROOT}" STREQUAL "" )
 	message(FATAL_ERROR "
