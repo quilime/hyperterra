@@ -1,30 +1,40 @@
 # Hyper Terra
 
-## Abstract
+## Software Abstract
 
-Projection Software for "Hyper Terra" Sculpture.
+OpenGL Projection Graphics Software for the "Hyper Terra" series of projection sculptures by [@quilime](https://github.com/quilime) (Gabriel Dunne)
 
-Projection graphics depic a Landscape that can exist in any time or place on Earth. Light is defined by the Sun and Moon positions of that time and place, calculated by an ephemeris table.
+The graphics elements depic an abstract landscape that can exist in any time or place on Earth. Lights are position at the Sun and Moon positions of that time and place, calculated by an [ephemeris](http://en.wikipedia.org/wiki/Ephemeris) table.
 
-Tested on
+## Screenshots
 
-- Nvidia Jetson TK1
-- Ubuntu 14.04
+![https://farm4.staticflickr.com/3874/14972519720_96154ba3dd_c.jpg](https://farm4.staticflickr.com/3874/14972519720_96154ba3dd_c.jpg)
 
-# Installation
+# Hardware
 
-## Ubuntu 14.04
+    - Nvidia Jetson TK1 
+    - Ubuntu 14.04 OS
 
-Python and Python-dev
+# Software
+
+Add unrestricted software available from Universe
+
+    $   sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
+    
+Update all packages
+
+    $   sudo apt-get update
+
+Install Python and Python-dev
 
     $   sudo apt-get install python-dev   # install python dev tools
     $   pip install pyephem               # install py ephem
 
-Soft-link hyperterra/ephemScript.py to local python library.
+Soft-link hyperterra/ephemScript.py to local python lib location so it's available globally.
 
     $   ln -s hyperterra/assets/ephemScript.py /usr/local/lib/python2.7/dev-packages/
 
-Building
+Clone source and build executable
 
     $   git clone https://github.com/quilime/hyperterra.git
     $   cd hyperterra
@@ -34,17 +44,19 @@ Building
     $   cd ../../
     $   make
     
+Run
+
+    $   ./linux/bin/release/LandscapeApp
+    
 Debugging
     
     $   make debug
     $   gdb ./linux/bin/debug/LandscapeApp_D # once in gdb, type 'r' to run
-    
-Run
-
-    $   ./linux/bin/release/LandscapeApp
 
 ## OSX 10.10
 
+[TDB]
+    
     $   ln -s hyperterra/assets/ephemScript.py /Library/Python/2.7/site-packages/
 
 
@@ -52,5 +64,3 @@ Run
 ## Usage
 
 Controlled by Liine Lemur App
-    
-    
