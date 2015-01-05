@@ -1,10 +1,15 @@
 # Hyper Terra
 
-A Landscape that can exist in any time or place on Earth. Light is defined by the Sun and Moon positions of that time and place, calculated by an ephemeris table.
+## Abstract
 
-Tested on:
-    - Nvidia Jetson TK1
-    - Ubuntu 14.04
+Projection Software for "Hyper Terra" Sculpture.
+
+Projection graphics depic a Landscape that can exist in any time or place on Earth. Light is defined by the Sun and Moon positions of that time and place, calculated by an ephemeris table.
+
+Tested on
+
+- Nvidia Jetson TK1
+- Ubuntu 14.04
 
 # Installation
 
