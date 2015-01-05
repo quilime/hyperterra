@@ -1,10 +1,12 @@
 Tested on an Nvidia TK1 running Ubuntu 14.04
 
-## install python-dev
+## Install Python and Python-dev
+
     $   sudo apt-get install python-dev   # install python dev tools
     $   pip install pyephem               # install py ephem
 
-## soft-link the landscape-cinder/ephemScript.py to local python lib
+Soft-link the landscape-cinder/ephemScript.py to local python lib
+
   - osx `/Library/Python/2.7/site-packages/`
   - linux `/usr/local/lib/python2.7/dev-packages/`
 
