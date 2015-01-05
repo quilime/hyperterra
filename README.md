@@ -1,16 +1,25 @@
-Tested on an Nvidia TK1 running Ubuntu 14.04
+# Hyper Terra
 
-## Install Python and Python-dev
+A Landscape that can exist in any time or place on Earth. Light is defined by the Sun and Moon positions of that time and place, calculated by an ephemeris table.
+
+Tested on:
+    - Nvidia Jetson TK1
+    - Ubuntu 14.04
+
+# Installation
+
+## Ubuntu 14.04
+
+### Python and Python-dev
 
     $   sudo apt-get install python-dev   # install python dev tools
     $   pip install pyephem               # install py ephem
 
-Soft-link the landscape-cinder/ephemScript.py to local python lib
+Soft-link hyperterra/ephemScript.py to local python library.
 
-  - osx `/Library/Python/2.7/site-packages/`
-  - linux `/usr/local/lib/python2.7/dev-packages/`
+    $   ln -s hyperterra/assets/ephemScript.py /usr/local/lib/python2.7/dev-packages/
 
-## Building
+Building
 
     $   git clone https://github.com/quilime/hyperterra.git
     $   cd hyperterra
@@ -20,14 +29,20 @@ Soft-link the landscape-cinder/ephemScript.py to local python lib
     $   cd ../../
     $   make
     
-## Debugging
+Debugging
     
     $   make debug
     $   gdb ./linux/bin/debug/LandscapeApp_D # once in gdb, type 'r' to run
     
-## Running
+Run
 
     $   ./linux/bin/release/LandscapeApp
+
+## OSX
+
+    $   ln -s hyperterra/assets/ephemScript.py /Library/Python/2.7/site-packages/
+
+
     
 ## Usage
 
