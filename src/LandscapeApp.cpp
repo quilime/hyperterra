@@ -525,9 +525,9 @@ void LandscapeApp::loadSettings(){
                    json.getValueForKey<float>("base3z"));
   
   // load object from assets folder
-  ObjLoader loader( (DataSourceRef) loadAsset("tweaked.obj") );
-  loader.load( &mMesh );
-  mVBO = gl::VboMesh::create( mMesh, mLayout );
+  // ObjLoader loader( (DataSourceRef) loadAsset("tweaked.obj") );
+  // loader.load( &mMesh );
+  // mVBO = gl::VboMesh::create( mMesh, mLayout );
 }
 
 
@@ -557,12 +557,18 @@ void LandscapeApp::saveSettings() {
   json.addChild(JsonTree("base3y", baseVerts[3].y));
   json.addChild(JsonTree("base3z", baseVerts[3].z));
   
-  // console() << getAssetPath("") / "settings.json" << endl;
-  json.write( getAssetPath("") / "settings.json" );
+  std::ofstream oStream( "assets/settings.json" );
+  oStream << json.serialize();
+  oStream.close();
   
-  // write object out to assets folder
-  console() << getAssetPath("") / "tweaked.obj" << endl;
-  // ObjLoader::write(writeFile(getAssetPath("") / "tweaked.obj"), mMesh);
+  // // write object out to assets folder
+  // // console() << getAssetPath("") / "tweaked.obj" << endl;
+  // ObjLoader::write(writeFile( "assets/tweaked.obj"), mMesh);
+
+  // DataTargetPathRef outpath = writeFile( "settings/tweaked.obj" );
+  // if( ! outpath ) {
+  //   console() << "can't write" << endl;
+  // }
 }
 
 

@@ -1,0 +1,21 @@
+{
+   "base0x" : 10.0,
+   "base0y" : 0.0,
+   "base0z" : -10.0,
+   "base1x" : -10.0,
+   "base1y" : 0.0,
+   "base1z" : -10.0,
+   "base2x" : -10.0,
+   "base2y" : 0.0,
+   "base2z" : 10.0,
+   "base3x" : 10.0,
+   "base3y" : 0.0,
+   "base3z" : 10.0,
+   "camera_eye_point_x" : -15.34227466583252,
+   "camera_eye_point_y" : 9.249071121215820,
+   "camera_eye_point_z" : 6.407449245452881,
+   "camera_fov" : 45.0,
+   "camera_viewdir_x" : 0.8018625378608704,
+   "camera_viewdir_y" : -0.4328179359436035,
+   "camera_viewdir_z" : -0.4119285345077515
+}
