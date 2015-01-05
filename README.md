@@ -10,7 +10,7 @@ Tested on:
 
 ## Ubuntu 14.04
 
-### Python and Python-dev
+Python and Python-dev
 
     $   sudo apt-get install python-dev   # install python dev tools
     $   pip install pyephem               # install py ephem
@@ -38,7 +38,7 @@ Run
 
     $   ./linux/bin/release/LandscapeApp
 
-## OSX
+## OSX 10.10
 
     $   ln -s hyperterra/assets/ephemScript.py /Library/Python/2.7/site-packages/
 
