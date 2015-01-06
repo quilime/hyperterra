@@ -40,9 +40,8 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-static const float	APP_RES_HORIZONTAL = 1920.0f;
-static const float	APP_RES_VERTICAL = 1200.0f;
 static const float  DEFAULT_LIGHT_DIST = 14.f;
+
 
 struct AzmAlt {
   double azm;
@@ -66,6 +65,8 @@ class LandscapeApp : public AppBasic
     void mouseUp( MouseEvent event);
   
   private:
+
+    float mWindow_res_x, mWindow_res_y;
   
     // osc
     osc::Listener 	listener;
@@ -139,20 +140,23 @@ class LandscapeApp : public AppBasic
     // positions
     AzmAlt mSunPos;
     AzmAlt mMoonPos;
-  
 };
 
 
 void LandscapeApp::prepareSettings( Settings *settings )
 {
-	settings->setWindowSize ( APP_RES_HORIZONTAL, APP_RES_VERTICAL );
-  settings->setBorderless ( false );
+  JsonTree initJson( loadAsset( "init.json" ) );
+  settings->setFullScreen ( initJson.getValueForKey<bool>("fullscreen") );
+  settings->setBorderless ( initJson.getValueForKey<bool>("borderless") );  
+
+  mWindow_res_x = initJson.getValueForKey<float>("window_res_x");
+  mWindow_res_y = initJson.getValueForKey<float>("window_res_y");
+	settings->setWindowSize ( mWindow_res_x, mWindow_res_y );
+  
 	settings->setFrameRate  ( 1000.0f ); // max it out
 	settings->setResizable  ( false ); // non-resizable because of the shadowmaps
-  settings->setFullScreen ( false );
-	// make sure secondary screen isn't blacked out as well when in fullscreen
-//	settings->enableSecondaryDisplayBlanking( false );
-//  settings->en
+  
+  // settings->enableSecondaryDisplayBlanking( false );
 }
 
 
@@ -224,7 +228,7 @@ void LandscapeApp::setup()
                           NULL,//fRenderOverlayFunc, // NULL
                           NULL,
                           &mCam,
-                          Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL),
+                          Vec2i(mWindow_res_x, mWindow_res_y),
                           1024,
                           true,
                           true
@@ -568,7 +572,7 @@ void LandscapeApp::saveSettings() {
   // ObjLoader::write(writeFile( "assets/tweaked.obj"), mMesh);
 
   // open stream
-  console() << "saving obj" << endl;
+  // console() << "saving obj" << endl;
   bool writeNormals = true;
   bool includeUVs = true;
   std::ofstream meshOutStream( "assets/tweaked.obj" );
