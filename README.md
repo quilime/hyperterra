@@ -14,8 +14,9 @@ OpenGL projection graphics software coded in C++ using a linux dev branch of the
 
 # Hardware
 
-- Nvidia Jetson TK1 
-- Ubuntu 14.04 OS
+- Computer: Nvidia Jetson TK1 
+- OS: Linux/Ubuntu 14.04 OS
+- Projector: PowerLite 1730W LCD Multimedia Projector (1280 x 800 native)
 
 # Software
 
