@@ -20,15 +20,9 @@ OpenGL projection graphics software coded in C++ using a linux dev branch of the
 
 # Software
 
-## Ubuntu 14.04 / Arm
+## Installation: Ubuntu 14.04 / Arm
 
-Add unrestricted software available from Universe
-
-    $   sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
-    
-Update all packages
-
-    $   sudo apt-get update
+First, follow the TK1 setup in README.Jetson-TK1.md, or this [gist](https://gist.github.com/quilime/0104aa2268cd8e5f0a51)
 
 Install Python and Python-dev
 
