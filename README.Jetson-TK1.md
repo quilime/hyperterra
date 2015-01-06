@@ -95,3 +95,10 @@ with this:
     exec /bin/login -f bob < /dev/tty1 > /dev/tty1 2>&1    
 
 
+Setup kiosk mode
+
+https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/
+http://askubuntu.com/questions/509330/execute-single-program-on-boot-no-menus
+
+mv ~/kiosk.conf in/out of /etc/init/
+
