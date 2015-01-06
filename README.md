@@ -26,22 +26,30 @@ First, follow the TK1 setup in README.Jetson-TK1.md, or this [gist](https://gist
 
 Install Python and Python-dev
 
-    $   sudo apt-get install python-dev   # install python dev tools
-    $   pip install pyephem               # install py ephem
+    # install python dev tools
+    $   sudo apt-get install python-dev python-pip
+    # install py ephem
+    $   sudo pip install pyephem               
 
-Soft-link hyperterra/ephemScript.py to local python lib location so it's available globally.
+Install deps for Cinder
 
-    $   ln -s hyperterra/assets/ephemScript.py /usr/local/lib/python2.7/dev-packages/
+    $   sudo apt-get update
+    $   sudo apt-get install build-essential cmake libgl1-mesa-dev libxrandr-dev libxi-dev libxcursor-dev libfreeimage-dev libpng12-dev libglew-dev libboost-system1.55.0 libboost-system1.55-dev libboost-filesystem1.55.0 libboost-filesystem1.55-dev libpthread-stubs0-dev zlib1g-dev
 
 Clone source and build executable
 
     $   git clone https://github.com/quilime/hyperterra.git
     $   cd hyperterra
-    $   git submodule init --recursive
+    $   git submodule update --init --recursive
+    $   export CINDER_ROOT=/home/ubuntu/hyperterra/deps/Cinder
     $   cd deps/Cinder 
-    $   make release # build Cinder "release" Build
+    $   make release
     $   cd ../../
     $   make
+
+Soft-link hyperterra/ephemScript.py to local python lib location so it's available globally.
+
+    $   sudo ln -s /home/ubuntu/hyperterra/assets/ephemScript.py /usr/local/lib/python2.7/dist-packages/
     
 Run
 
@@ -50,7 +58,7 @@ Run
 Debugging
     
     $   make debug
-    $   gdb ./linux/bin/debug/LandscapeApp_D # once in gdb, type 'r' to run
+    $   gdb ./linux/debug/bin/LandscapeApp_D # once in gdb, type 'r' to run
 
 ## OSX 10.10
 

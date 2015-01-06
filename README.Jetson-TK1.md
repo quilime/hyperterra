@@ -65,15 +65,33 @@ enable universe in the apt source list
     
     $   sudo apt-mark hold xserver-xorg-core
 
-update and upgrade
+update and upgrade (This will take a while)
 
     $   sudo apt-get update && sudo apt-get upgrade
 
 install useful packages
 
-    $   sudo apt-get install git screen
+    $   sudo apt-get install git screen tee build-essential cmake
+
+misc cleanup
+
+    $   sudo apt-get autoclean && sudo apt-get clean
 
 disable gui desktop and window manager
 from here: http://www.pathbreak.com/blog/ubuntu-startup-init-scripts-runlevels-upstart-jobs-explained    
 
     $   sudo mv /etc/init/lightdm.conf /etc/init/lightdm.conf.disabled
+
+Auto login user "ubuntu" on first console terminal (tty1) 
+
+    $   sudo vim /etc/init/tty1.conf
+
+replace last line:
+
+    exec /sbin/getty -8 38400 tty1
+
+with this:
+
+    exec /bin/login -f bob < /dev/tty1 > /dev/tty1 2>&1    
+
+
