@@ -251,6 +251,8 @@ void LandscapeApp::setup()
   mTimeIncrement = 0;
   mNorth = 0;
   mTimeDay = getNowDay();
+
+  loadSettings();
 }
 
 
