@@ -1,6 +1,6 @@
-Setting up Nvidia Jetson TK1
+Basic setup guide for Nvidia Jetson TK1
 
-Useful links and references:
+Links and references:
 
 - https://developer.nvidia.com/jetson-tk1
 - http://elinux.org/Jetson_TK1
