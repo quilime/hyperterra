@@ -103,7 +103,7 @@ Scan for USB network devices
 
     sudo lshw -C network
 
-    and/or
+and/or
 
     lspci -nnk | grep -i net -A2
 
