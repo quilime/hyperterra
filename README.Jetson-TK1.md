@@ -113,13 +113,6 @@ and/or
 
 ## Set up as Kiosk
 
-References:
-
-- http://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/
-- http://thepcspy.com/read/converting-ubuntu-desktop-to-kiosk/
-- http://askubuntu.com/questions/509330/execute-single-program-on-boot-no-menus
-
-
     sudo apt install --no-install-recommends openbox
     sudo install -b -m 755 /dev/stdin /opt/kiosk.sh << EOF
     #!/bin/bash
@@ -183,10 +176,18 @@ Change the default window manager (works also with the autologin):
     sudo mkdir -p /etc/lightdm/lightdm.conf.d
     sudo vim /etc/lightdm/lightdm.conf.d/xfce.conf
 
-    And add the following lines:
+add the following lines:
 
     [SeatDefaults]
     user-session=xfce
+
+
+References
+
+- http://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/
+- http://thepcspy.com/read/converting-ubuntu-desktop-to-kiosk/
+- http://askubuntu.com/questions/509330/execute-single-program-on-boot-no-menus
+
 
 
 
