@@ -7,39 +7,77 @@ Links and references:
 - https://devtalk.nvidia.com/default/topic/785551/embedded-systems/my-jetson-focused-linux-tips-and-tricks/
 - https://cyclicredundancy.wordpress.com/2014/05/10/flashing-the-rootfs-on-a-nvidia-jetson-tk1/
 
+
+## First Steps
+
 Connect keyboard, mouse, monitor
 
-Connect power to turn on tk1
+Connect power to turn on TK1
 
-Open terminal ctrl-alt-t
+Login with default 'ubuntu' user, password: 'ubuntu'
 
-Verify that start stop restart works
+Open terminal via ctrl-alt-t
+
+Verify that poweroff and reboot works
 
     $   sudo poweroff
     $   sudo reboot
 
-got internet?
+Ping
 
     $   sudo ping google.com
 
-setup timezone
+Enable universe in the apt source list
+
+    $   sudo vi /etc/apt/sources.list
+
+"libglx.so" is a specific file in NVIDIA's graphics driver that might get replaced by an incorrect version when doing apt-get, so we hold it. (this may be old?)
+    
+    $   sudo apt-mark hold xserver-xorg-core
+
+You can also hold libglx.so by making a backup
+
+    $   sudo cp /usr/lib/xorg/modules/extensions/libglx.so /usr/lib/xorg/modules/extensions/libglx.so-19r3
+
+It takes a quite a while to login with ssh as Ubuntu checks for updates. To disable that, edit
+
+    /etc/update-motd.d/90-updates-available
+    /etc/update-motd.d/91-release-upgrade    
+
+Update and upgrade (This may take a while)
+
+    $   sudo apt-get update && sudo apt-get upgrade
+
+install packages
+
+    $   sudo apt-get install tee git screen lshw cmake build-essential linux-firmware linux-headers-generic
+
+misc cleanup
+
+    $   sudo apt-get autoclean && sudo apt-get clean
+
+
+
+## Setting The Clock
+
+Setup timezone
 
     $   sudo dpkg-reconfigure tzdata
 
-set sysclock, only if internet is down
+Set sysclock
 
     $   sudo date mmddhhmmyyyy.ss
     $   sudo date 050607002014
 
-check time on HW RTC
+Check time on Hardware real-time clock
 
     $   sudo hwclock --debug
 
-sync HW RTC to sysclock
+Sync HW RTC to sysclock
 
     $   sudo hwclock -w    
 
-add automatic time update at startup and to crontab
+To check time on startup, add automatic time update at startup and to crontab
 
     $   sudo vi /etc/rc.local
     
@@ -48,41 +86,87 @@ add the following lines
     ntpdate-debian
     hwclock -w
     
-edit crontab for root
+For repeated checking, edit crontab for root:
 
     $   sudo crontab -e
     
-add following lines
+Add following lines:
 
     5 * * * * ntpdate-debian
     7 * * * * hwclock -w    
 
-enable universe in the apt source list
 
-    $   sudo vi /etc/apt/sources.list
 
-"libglx.so" is a specific file in NVIDIA's graphics driver that might get replaced by an incorrect version when doing apt-get, so we hold it. (this may be old?)
-    
-    $   sudo apt-mark hold xserver-xorg-core
+## Networking
 
-update and upgrade (This will take a while)
+Scan for USB network devices
 
-    $   sudo apt-get update && sudo apt-get upgrade
+    $   sudo lshw -C network
 
-install useful packages
+    and/or
 
-    $   sudo apt-get install git screen tee build-essential cmake
+    $   lspci -nnk | grep -i net -A2
 
-misc cleanup
 
-    $   sudo apt-get autoclean && sudo apt-get clean
 
-disable gui desktop and window manager
-from here: http://www.pathbreak.com/blog/ubuntu-startup-init-scripts-runlevels-upstart-jobs-explained    
 
+
+## Set up as Kiosk
+
+References:
+
+- http://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/
+- http://thepcspy.com/read/converting-ubuntu-desktop-to-kiosk/
+- http://askubuntu.com/questions/509330/execute-single-program-on-boot-no-menus
+
+
+    $   sudo apt install --no-install-recommends openbox
+    $   sudo install -b -m 755 /dev/stdin /opt/kiosk.sh << EOF
+    #!/bin/bash
+
+    xset -dpms
+    xset s off
+    openbox-session &
+
+    while true; do
+        /home/ubuntu/hyperterra/linux/release/bin/LandscapeApp
+    done
+    EOF
+
+    $   sudo install -b -m 644 /dev/stdin /etc/init/kiosk.conf << EOF
+    start on (filesystem and stopped udevtrigger)
+    stop on runlevel [06]
+
+    emits starting-x
+    respawn
+
+    exec sudo -u $USER startx /etc/X11/Xsession /opt/kiosk.sh --
+    EOF
+
+    $   sudo dpkg-reconfigure x11-common  # select 'Anybody' in menu popup to allow any user to launch X11
+
+    $   echo manual | sudo tee /etc/init/lightdm.override  # disable desktop window manager
+    # or
     $   sudo mv /etc/init/lightdm.conf /etc/init/lightdm.conf.disabled
 
-Auto login user "ubuntu" on first console terminal (tty1) 
+    $   sudo reboot
+
+
+Access system settings from black xsession terminal. Use `ctrl-alt-t` to open a terminal from blank xsession
+
+    $   unity-control-center
+
+To login automatically to the graphical environment:
+
+    sudo mkdir -p /etc/lightdm/lightdm.conf.d
+    sudo vim /etc/lightdm/lightdm.conf.d/autologin.conf
+
+And add the following lines:
+
+    [SeatDefaults]
+    autologin-user=ubuntu
+
+Another way to auto login user "ubuntu" on first console terminal (tty1) :
 
     $   sudo vim /etc/init/tty1.conf
 
@@ -90,15 +174,31 @@ replace last line:
 
     exec /sbin/getty -8 38400 tty1
 
-with this:
+with:
 
     exec /bin/login -f bob < /dev/tty1 > /dev/tty1 2>&1    
 
+Change the default window manager (works also with the autologin):
 
-Setup kiosk mode
+    sudo mkdir -p /etc/lightdm/lightdm.conf.d
+    sudo vim /etc/lightdm/lightdm.conf.d/xfce.conf
 
-https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/
-http://askubuntu.com/questions/509330/execute-single-program-on-boot-no-menus
+    And add the following lines:
 
-mv ~/kiosk.conf in/out of /etc/init/
+    [SeatDefaults]
+    user-session=xfce
+
+
+
+## VNC
+
+Install VNC server:
+
+    sudo apt-get install tightvncserver
+
+Confirmed that /etc/ssh/ssh_config on the server contains the lines
+
+    ForwardAgent yes
+    ForwardX11 yes
+    ForwardX11Trusted yes
 
