@@ -4,13 +4,17 @@
 
 OpenGL projection graphics software coded in C++ using a linux dev branch of the [Cinder](http://libcinder.org/) framework (included as a submodule). 
 
-"Hyper Terra" is a series of projection sculptures by [Gabriel Dunne](http://gabrieldunne.com)
-
-3D graphics depic an abstract landscape that can exist in any time and lat/long on Earth. Lights are position at the Sun and Moon positions of that time and place, calculated by an [ephemeris](http://en.wikipedia.org/wiki/Ephemeris) table, via pyephem, a library for Python.
+3D graphics depict an abstract landscape that can exist in any time and lat/long on Earth. Lights are position at the Sun and Moon positions of that time and place, calculated by an [ephemeris](http://en.wikipedia.org/wiki/Ephemeris) table, via pyephem, a library for Python.
 
 ## Screenshots
 
 ![https://farm4.staticflickr.com/3874/14972519720_96154ba3dd_c.jpg](https://farm4.staticflickr.com/3874/14972519720_96154ba3dd_c.jpg)
+
+"Hyper Terra" is a series of projection sculptures by [Gabriel Dunne](http://gabrieldunne.com)
+
+## Photos
+
+![https://farm8.staticflickr.com/7558/16110524908_6d91e1e6df_c.jpg](https://farm8.staticflickr.com/7558/16110524908_6d91e1e6df_c.jpg)
 
 # Hardware
 
