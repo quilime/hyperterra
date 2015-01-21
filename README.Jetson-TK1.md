@@ -14,30 +14,30 @@ Connect keyboard, mouse, monitor
 
 Connect power to turn on TK1
 
-Login with default 'ubuntu' user, password: 'ubuntu'
+Login with default `ubuntu` user, password: `ubuntu`
 
 Open terminal via ctrl-alt-t
 
 Verify that poweroff and reboot works
 
-    $   sudo poweroff
-    $   sudo reboot
+    sudo poweroff
+    sudo reboot
 
 Ping
 
-    $   sudo ping google.com
+    sudo ping google.com
 
 Enable universe in the apt source list
 
-    $   sudo vi /etc/apt/sources.list
+    sudo vi /etc/apt/sources.list
 
 "libglx.so" is a specific file in NVIDIA's graphics driver that might get replaced by an incorrect version when doing apt-get, so we hold it. (this may be old?)
     
-    $   sudo apt-mark hold xserver-xorg-core
+    sudo apt-mark hold xserver-xorg-core
 
 You can also hold libglx.so by making a backup
 
-    $   sudo cp /usr/lib/xorg/modules/extensions/libglx.so /usr/lib/xorg/modules/extensions/libglx.so-19r3
+    sudo cp /usr/lib/xorg/modules/extensions/libglx.so /usr/lib/xorg/modules/extensions/libglx.so-19r3
 
 It takes a quite a while to login with ssh as Ubuntu checks for updates. To disable that, edit
 
@@ -46,15 +46,15 @@ It takes a quite a while to login with ssh as Ubuntu checks for updates. To disa
 
 Update and upgrade (This may take a while)
 
-    $   sudo apt-get update && sudo apt-get upgrade
+    sudo apt-get update && sudo apt-get upgrade
 
 install packages
 
-    $   sudo apt-get install tee git screen lshw cmake build-essential linux-firmware linux-headers-generic
+    sudo apt-get install tee git screen lshw cmake build-essential linux-firmware linux-headers-generic
 
 misc cleanup
 
-    $   sudo apt-get autoclean && sudo apt-get clean
+    sudo apt-get autoclean && sudo apt-get clean
 
 
 
@@ -62,24 +62,24 @@ misc cleanup
 
 Setup timezone
 
-    $   sudo dpkg-reconfigure tzdata
+    sudo dpkg-reconfigure tzdata
 
 Set sysclock
 
-    $   sudo date mmddhhmmyyyy.ss
-    $   sudo date 050607002014
+    sudo date mmddhhmmyyyy.ss
+    sudo date 050607002014
 
 Check time on Hardware real-time clock
 
-    $   sudo hwclock --debug
+    sudo hwclock --debug
 
 Sync HW RTC to sysclock
 
-    $   sudo hwclock -w    
+    sudo hwclock -w    
 
 To check time on startup, add automatic time update at startup and to crontab
 
-    $   sudo vi /etc/rc.local
+    sudo vi /etc/rc.local
     
 add the following lines
 
@@ -88,7 +88,7 @@ add the following lines
     
 For repeated checking, edit crontab for root:
 
-    $   sudo crontab -e
+    sudo crontab -e
     
 Add following lines:
 
@@ -101,11 +101,11 @@ Add following lines:
 
 Scan for USB network devices
 
-    $   sudo lshw -C network
+    sudo lshw -C network
 
     and/or
 
-    $   lspci -nnk | grep -i net -A2
+    lspci -nnk | grep -i net -A2
 
 
 
@@ -120,8 +120,8 @@ References:
 - http://askubuntu.com/questions/509330/execute-single-program-on-boot-no-menus
 
 
-    $   sudo apt install --no-install-recommends openbox
-    $   sudo install -b -m 755 /dev/stdin /opt/kiosk.sh << EOF
+    sudo apt install --no-install-recommends openbox
+    sudo install -b -m 755 /dev/stdin /opt/kiosk.sh << EOF
     #!/bin/bash
 
     xset -dpms
@@ -133,7 +133,7 @@ References:
     done
     EOF
 
-    $   sudo install -b -m 644 /dev/stdin /etc/init/kiosk.conf << EOF
+    sudo install -b -m 644 /dev/stdin /etc/init/kiosk.conf << EOF
     start on (filesystem and stopped udevtrigger)
     stop on runlevel [06]
 
@@ -143,18 +143,18 @@ References:
     exec sudo -u $USER startx /etc/X11/Xsession /opt/kiosk.sh --
     EOF
 
-    $   sudo dpkg-reconfigure x11-common  # select 'Anybody' in menu popup to allow any user to launch X11
+    sudo dpkg-reconfigure x11-common  # select 'Anybody' in menu popup to allow any user to launch X11
 
-    $   echo manual | sudo tee /etc/init/lightdm.override  # disable desktop window manager
+    echo manual | sudo tee /etc/init/lightdm.override  # disable desktop window manager
     # or
-    $   sudo mv /etc/init/lightdm.conf /etc/init/lightdm.conf.disabled
+    sudo mv /etc/init/lightdm.conf /etc/init/lightdm.conf.disabled
 
-    $   sudo reboot
+    sudo reboot
 
 
 Access system settings from black xsession terminal. Use `ctrl-alt-t` to open a terminal from blank xsession
 
-    $   unity-control-center
+    unity-control-center
 
 To login automatically to the graphical environment:
 
@@ -168,7 +168,7 @@ And add the following lines:
 
 Another way to auto login user "ubuntu" on first console terminal (tty1) :
 
-    $   sudo vim /etc/init/tty1.conf
+    sudo vim /etc/init/tty1.conf
 
 replace last line:
 
