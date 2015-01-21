@@ -1,5 +1,9 @@
 # Hyper Terra
 
+"Hyper Terra" is a series of projection sculptures by [Gabriel Dunne](http://gabrieldunne.com)
+
+![https://farm8.staticflickr.com/7558/16110524908_6d91e1e6df_c.jpg](https://farm8.staticflickr.com/7558/16110524908_6d91e1e6df_c.jpg)
+
 ## Software Abstract
 
 OpenGL projection graphics software coded in C++ using a linux dev branch of the [Cinder](http://libcinder.org/) framework (included as a submodule). 
@@ -10,11 +14,6 @@ OpenGL projection graphics software coded in C++ using a linux dev branch of the
 
 ![https://farm4.staticflickr.com/3874/14972519720_96154ba3dd_c.jpg](https://farm4.staticflickr.com/3874/14972519720_96154ba3dd_c.jpg)
 
-"Hyper Terra" is a series of projection sculptures by [Gabriel Dunne](http://gabrieldunne.com)
-
-## Photos
-
-![https://farm8.staticflickr.com/7558/16110524908_6d91e1e6df_c.jpg](https://farm8.staticflickr.com/7558/16110524908_6d91e1e6df_c.jpg)
 
 # Hardware
 
