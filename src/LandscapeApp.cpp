@@ -151,10 +151,10 @@ void LandscapeApp::prepareSettings( Settings *settings )
 
   mWindow_res_x = initJson.getValueForKey<float>("window_res_x");
   mWindow_res_y = initJson.getValueForKey<float>("window_res_y");
-	settings->setWindowSize ( mWindow_res_x, mWindow_res_y );
+  settings->setWindowSize ( mWindow_res_x, mWindow_res_y );
   
-	settings->setFrameRate  ( 1000.0f ); // max it out
-	settings->setResizable  ( false ); // non-resizable because of the shadowmaps
+  settings->setFrameRate  ( 1000.0f ); // max it out
+  settings->setResizable  ( false ); // non-resizable because of the shadowmaps
   
   // settings->enableSecondaryDisplayBlanking( false );
 }
@@ -183,12 +183,12 @@ void LandscapeApp::setup()
   mCurrFramerate  = 0.0f;
   mSunPos = getSunPosition(getNowDay());
   mMoonPos = getMoonPosition(getNowDay());
-  mSunColor  = Color(1.0f, 1.0f, 0.9f);
-  mMoonColor = Color(0.24f, 0.15f, 0.94f);
+  mSunColor  = Color(1.0f, 0.5f, 0.37f);
+  mMoonColor = Color(0.24f, 0.35f, 0.75f);
   mAmbientBrightnessMult = 1000.0f;
   mAmbientBrightness = 0.1f;
   mSunBrightness = 1.0f;
-  mMoonBrightness = 1.0f;
+  mMoonBrightness = 0.5f;
   mCount = 0;
   mSetup = false;
   mBaseSetup = false;
@@ -248,7 +248,7 @@ void LandscapeApp::setup()
   
   // follow time right now as a float in days
   mTimeTracking = true;
-  mTimeIncrement = 0;
+  mTimeIncrement = 0.00007;
   mNorth = 0;
   mTimeDay = getNowDay();
 
@@ -293,7 +293,7 @@ void LandscapeApp::update()
 //  mMoonBrightness = mMoonPos.alt > 0 ? 1 : 0;
   
   
-  // rotate sun
+  // sun
   Vec3f sunPos(mSunPos.dist, 0, 0);
   sunPos.rotate(Vec3f(0, 0, 1), mSunPos.alt );
   sunPos.rotate(Vec3f(0, 1, 0), mSunPos.azm + mNorth );
@@ -303,7 +303,7 @@ void LandscapeApp::update()
                                                       mAmbientBrightnessMult) *
                                                       mSunColor.a *
                                                       mSunBrightness);
-  // rotate sun
+  // moon
   Vec3f moonPos(mMoonPos.dist, 0, 0);
   moonPos.rotate(Vec3f(0, 0, 1), mMoonPos.alt );
   moonPos.rotate(Vec3f(0, 1, 0), mMoonPos.azm + mNorth );
