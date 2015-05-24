@@ -1,6 +1,6 @@
 # Hyper Terra
 
-"Hyper Terra" is a series of projection sculptures by [Gabriel Dunne](http://gabrieldunne.com)
+Software for Hyper Terra projection sculptures by [Gabriel Dunne](http://gabrieldunne.com)
 
 ![https://farm8.staticflickr.com/7558/16110524908_6d91e1e6df_c.jpg](https://farm8.staticflickr.com/7558/16110524908_6d91e1e6df_c.jpg)
 
