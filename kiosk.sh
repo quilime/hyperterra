@@ -6,5 +6,3 @@
 xset -dpms
 xset s off
 /home/ubuntu/hyperterra/linux/release/bin/LandscapeApp
-
-

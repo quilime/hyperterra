@@ -57,23 +57,23 @@ Soft-link hyperterra/ephemScript.py to local python lib location so it's availab
 
     sudo ln -s /home/ubuntu/hyperterra/assets/ephemScript.py /usr/local/lib/python2.7/dist-packages/
     
-Run
+Run Locally
 
     ./linux/bin/release/LandscapeApp
     
-Debugging
+Debugger
     
     make debug
     gdb ./linux/debug/bin/LandscapeApp_D # once in gdb, type 'r' to run
 
-## OSX 10.10
+Setup Auto-Boot Kiosk
 
-[TDB]
+    $   sudo cp kiosk.conf /etc/init/
+    $   sudo cp kiosk.sh /opt/
+    $   sudo reboot #reboot into kiosk mode
     
-    ln -s hyperterra/assets/ephemScript.py /Library/Python/2.7/site-packages/
+## Controller
+
+Liine Lemur App
 
 
-    
-## Usage
-
-Controlled by Liine Lemur App

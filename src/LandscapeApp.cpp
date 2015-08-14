@@ -217,9 +217,9 @@ void LandscapeApp::setup()
   
   //create functions pointers to send to deferred renderer
   boost::function<void(gl::GlslProg*)> fRenderShadowCastersFunc =
-    boost::bind( &LandscapeApp::drawShadowCasters, this, boost::lambda::_1 );
+  boost::bind( &LandscapeApp::drawShadowCasters, this, boost::lambda::_1 );
   boost::function<void(gl::GlslProg*)> fRenderNotShadowCastersFunc =
-    boost::bind( &LandscapeApp::drawNonShadowCasters, this,  boost::lambda::_1 );
+  boost::bind( &LandscapeApp::drawNonShadowCasters, this,  boost::lambda::_1 );
 
   // setup deferred renderer
   mDeferredRenderer.setup(
